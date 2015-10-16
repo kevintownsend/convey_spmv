@@ -1,0 +1,3 @@
+[submodule "verilog/ram"]
+	path = verilog/ram
+	url = git@github.com:kevintownsend/ram.git
