@@ -32,4 +32,5 @@ module mac(clk, rst, wr, row, v0, v1, push_out, v_out, eof);
 
     //TODO: ieee converter
 
+    `include "common.vh"
 endmodule
