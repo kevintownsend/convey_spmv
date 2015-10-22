@@ -43,6 +43,12 @@ module mac_tb;
         eof = 1;
         #10 eof = 0;
     end
+
+    initial begin
+        #100000 $display("watchdog reached");
+        $finish;
+    end
+
     always @(posedge clk) begin
         //TODO: output
     end
