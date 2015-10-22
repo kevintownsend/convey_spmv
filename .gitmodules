@@ -7,6 +7,3 @@
 [submodule "verilog/std_fifo"]
 	path = verilog/std_fifo
 	url = git@github.com:kevintownsend/std_fifo.git
-[submodule "decoders"]
-	path = decoders
-	url = git@github.com:kevintownsend/decoders.git
