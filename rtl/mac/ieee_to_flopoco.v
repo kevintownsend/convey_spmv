@@ -1,4 +1,4 @@
-module(clk, push_in, ieee_float, push_out, flopoco_float);
+module ieee_to_flopoco(clk, push_in, ieee_float, push_out, flopoco_float);
 input clk, push_in;
 input [63:0] ieee_float;
 output push_out;

@@ -20,7 +20,11 @@ module mac_tb;
     reg [63:0] row_index [0:24];
     reg [63:0] col_index [0:24];
 
-    initial $readmemh("floats.hex", floats);
+    initial begin
+        $readmemh("floats.hex", floats);
+        $readmemh("row.hex", row_index);
+        $readmemh("col.hex", col_index);
+    end
 
     integer i = 0;
     initial begin
@@ -45,7 +49,7 @@ module mac_tb;
     end
 
     initial begin
-        #100000 $display("watchdog reached");
+        #1000 $display("watchdog reached");
         $finish;
     end
 
