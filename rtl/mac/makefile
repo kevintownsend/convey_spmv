@@ -65,7 +65,7 @@ work:
 	vlib work
 
 sim: work $(vsim_mac) $(vsim_mac_tb) $(vsim_intermediator) $(vsim_dual_port_xor_ram) $(vsim_dual_port_block_ram) $(vsim_std_fifo) $(vsim_adder_pipe) $(vsim_multiplier_pipe) $(vsim_ieee_to_flopoco) $(vsim_flopoco_to_ieee) $(vsim_InputIEEE_11_52_to_11_52) $(vsim_OutputIEEE_11_52_to_11_52) $(vsim_FPMultiplier_11_52_11_52_11_52_uid2) $(vsim_FPAdder_11_52_uid2)
-	echo -e "vsim work.mac_tb\nrun -all" | vsim
+	echo -e "vsim work.mac_tb\nset StdArithNoWarnings 1\nset NumericStdNoWarnings 1\nrun -all" | vsim
 
 sim_intermediator: work $(vsim_intermediator) $(vsim_intermediator_tb) $(vsim_dual_port_xor_ram) $(vsim_dual_port_block_ram) $(vsim_std_fifo)
 	echo -e "vsim work.intermediator_tb\nrun -all" | vsim

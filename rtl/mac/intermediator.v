@@ -29,6 +29,10 @@ always @(posedge clk) begin
     p1_stage_0 <= wr1;
     v1_stage_0 <= v1;
     r1_stage_0 <= row1;
+    if(rst) begin
+        p0_stage_0 <= 0;
+        p1_stage_0 <= 0;
+    end
 end
 
 reg p0_stage_1;
@@ -85,7 +89,9 @@ always @(posedge clk) begin
         window_begin <= window_begin + 1;
         r1_stage_2 <= window_begin;
     end
-    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] || eof) begin
+    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof) begin
+        $display("incrementing window at %d", $time);
+
         //TODO: raise error if window begin not equal window end
         fade_counter[7] <= 1;
         window_end[LOG2_INTERMEDIATOR_DEPTH - 1] <= !window_end[LOG2_INTERMEDIATOR_DEPTH - 1];
@@ -232,8 +238,8 @@ reg [65:0] value1_to_adder_stage_7;
 always @(posedge clk) begin
     to_adder_stage_7 <= p1_stage_6;
     row_to_adder_stage_7 <= r1_stage_6;
-    value0_to_adder_stage_7 <= v0_stage_6;
-    value1_to_adder_stage_7 <= v0_second_stage_6;
+    value0_to_adder_stage_7 <= v1_stage_6;
+    value1_to_adder_stage_7 <= v1_second_stage_6;
     if(overflow_fifo_pop_delay_stage_6) begin
         to_adder_stage_7 <= 1;
         row_to_adder_stage_7 <= overflow_fifo_q_row_stage_6;

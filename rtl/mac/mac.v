@@ -21,7 +21,7 @@ module mac(clk, rst, wr, row, v0, v1, push_out, v_out, eof);
     wire [LOG2_INTERMEDIATOR_DEPTH - 1:0] multiplier_row;
     wire multiplier_push;
 
-    multiplier_pipe multiplier(clk, flopoco_conv_push, row_input_stage, flopoco_conv_v0, flopoco_conv_v1, multiplier_push, multiplier_row, multiplier_out);
+    multiplier_pipe #(LOG2_INTERMEDIATOR_DEPTH) multiplier(clk, flopoco_conv_push, row_input_stage, flopoco_conv_v0, flopoco_conv_v1, multiplier_push, multiplier_row, multiplier_out);
 
     wire adder_push_out;
     wire [LOG2_INTERMEDIATOR_DEPTH - 1:0] adder_row;
@@ -32,9 +32,12 @@ module mac(clk, rst, wr, row, v0, v1, push_out, v_out, eof);
     wire [65:0] intermediator_v0_to_adder;
     wire [65:0] intermediator_v1_to_adder;
 
-    intermediator intermediator_inst(clk, rst, multiplier_push, multiplier_row, multiplier_out, adder_push_out, adder_row, adder_out, intermediator_push_to_adder, intermediator_row_to_adder, intermediator_v0_to_adder, intermediator_v1_to_adder, intermediator_push_to_ieee, intermediator_v_to_ieee, eof);
+    wire intermediator_push_to_ieee;
+    wire [65:0] intermediator_v_to_ieee;
 
-    adder_pipe adder(clk, intermediator_push_to_adder, intermediator_row_to_adder, intermediator_v0_to_adder, intermediator_v1_to_adder, adder_push_out, adder_row, adder_out);
+    intermediator #(INTERMEDIATOR_DEPTH) intermediator_inst(clk, rst, multiplier_push, multiplier_row, multiplier_out, adder_push_out, adder_row, adder_out, intermediator_push_to_adder, intermediator_row_to_adder, intermediator_v0_to_adder, intermediator_v1_to_adder, intermediator_push_to_ieee, intermediator_v_to_ieee, eof);
+
+    adder_pipe #(LOG2_INTERMEDIATOR_DEPTH) adder(clk, intermediator_push_to_adder, intermediator_row_to_adder, intermediator_v0_to_adder, intermediator_v1_to_adder, adder_push_out, adder_row, adder_out);
 
     //TODO: ieee converter
     flopoco_to_ieee to_ieee(clk, intermediator_push_to_ieee, intermediator_v_to_ieee, push_out, v_out);
