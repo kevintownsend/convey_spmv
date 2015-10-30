@@ -10,3 +10,6 @@
 [submodule "rtl/decoders"]
 	path = rtl/decoders
 	url = git@github.com:kevintownsend/decoders.git
+[submodule "src/smac"]
+	path = src/smac
+	url = git@github.com:kevintownsend/smac.git
