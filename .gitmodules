@@ -13,3 +13,6 @@
 [submodule "src/smac"]
 	path = src/smac
 	url = git@github.com:kevintownsend/smac.git
+[submodule "rtl/linked_list_fifo"]
+	path = rtl/linked_list_fifo
+	url = git@github.com:kevintownsend/linked_list_fifo.git
