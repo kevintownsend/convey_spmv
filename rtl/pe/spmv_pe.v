@@ -1,5 +1,6 @@
 module spmv_pe(clk, opt_in, opt_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d, req_mem_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
 parameter ID = 0;
+`include "spmv_opcodes.vh"
 localparam OPCODE_ARG_PE = 7;
 localparam OPCODE_ARG_1 = 12;
 
@@ -7,9 +8,9 @@ reg rst, next_rst;
 reg state, next_state;
 localparam IDLE = 0;
 localparam STEADY = 1;
-reg [47:0] registers [0:1], next_registers[0:1];
 localparam REGISTER_START = 0;
-localparam REGISTER_END = 2;
+localparam REGISTER_END = 4;
+reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
 always @(posedge clk) begin
     rst <= next_rst;
     state <= next_state;
@@ -49,4 +50,9 @@ always @* begin
         end
     endcase
 end
+    //TODO: decoder
+    //TODO: x vector cache
+    //TODO: intermediator
+    //TODO: memory stuff
+    `include "common.vh"
 endmodule
