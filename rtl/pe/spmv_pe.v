@@ -1,8 +1,31 @@
-module spmv_pe(clk, opt_in, opt_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d, req_mem_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
+module spmv_pe(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
+
 parameter ID = 0;
 `include "spmv_opcodes.vh"
-localparam OPCODE_ARG_PE = 7;
-localparam OPCODE_ARG_1 = 12;
+input clk;
+input [63:0] op_in;
+output [63:0] op_out;
+input busy_in;
+output busy_out;
+output reg req_mem_ld;
+output reg req_mem_st;
+output reg [47:0] req_mem_addr;
+output reg [63:0] req_mem_d_or_tag;
+input req_mem_stall;
+input rsp_mem_push;
+input [2:0] rsp_mem_tag;
+input [63:0] rsp_mem_q;
+output rsp_mem_stall;
+
+output req_scratch_ld;
+output req_scratch_st;
+output [12:0] req_scratch_addr;
+output [63:0] req_scratch_d;
+input req_scratch_stall;
+input rsp_scratch_push;
+input [63:0] rsp_scratch_q;
+output rsp_scratch_stall;
+
 
 reg rst, next_rst;
 reg state, next_state;
@@ -11,21 +34,27 @@ localparam STEADY = 1;
 localparam REGISTER_START = 0;
 localparam REGISTER_END = 4;
 reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
+integer i;
 always @(posedge clk) begin
     rst <= next_rst;
     state <= next_state;
-    for(i = REGISTER_START; i < RGESTER_END; i = i + 1)
+    for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
         registers[i] <= next_registers[i];
 end
+wire registers_equal = registers[0] == registers[1];
 reg busy_status;
+wire decoder_busy;
+reg [63:0] op_r;
+reg busy_r;
+reg mac_input_stage_1;
 always @* begin
     next_rst = 0;
     next_state = state;
     busy_status = 0;
     for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
         next_registers[i] = registers[i];
-    if(opt_r[OPCODE_ARG_1 - 1] || opt_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
-        case(opt_r[OPCODE_ARG_PE - 1:0])
+    if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
+        case(op_r[OPCODE_ARG_PE - 1:0])
             OP_RST: begin
                 next_rst = 1;
                 next_state = 0;
@@ -35,8 +64,8 @@ always @* begin
             end
             OP_LD: begin
                 for(i = REGISTER_START; i < REGISTER_END; i = i + 1) begin
-                    if(i == opt_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1)
-                        next_registers[i] = opt_r[63:OPCODE_ARG_2];
+                    if(i == op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
+                        next_registers[i] = op_r[63:OPCODE_ARG_2];
                 end
             end
         endcase
@@ -49,10 +78,146 @@ always @* begin
                 next_state = IDLE;
         end
     endcase
+    if(mac_input_stage_1)
+        next_registers[3] = registers[3] - 1;
+    if(registers[3][47])
+        next_registers[3][47] = 0;
 end
+
+
+always @(posedge clk) begin
+    op_r <= op_in;
+    busy_r <= busy_status || busy_in;
+
+end
+assign op_out = op_r;
+assign busy_out = busy_r;
     //TODO: decoder
+    wire decoder_req_mem_ld;
+    wire [47:0] decoder_req_mem_addr;
+    wire [1:0] decoder_req_mem_tag;
+    wire decoder_mem_fifo_almost_full;
+    reg decoder_rsp_mem_push;
+    reg [2:0] rsp_mem_tag_stage_1;
+    reg [63:0] rsp_mem_q_stage_1;
+    wire decoder_rsp_mem_stall;
+    wire decoder_push_index;
+    wire [31:0] decoder_row;
+    wire [31:0] decoder_col;
+    reg decoder_stall_index;
+    wire decoder_push_val;
+    wire [63:0] decoder_val;
+    reg decoder_stall_val;
+    //TODO: finish
+
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_fifo_almost_full, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+
+    always @(posedge clk) begin
+        decoder_rsp_mem_push <= rsp_mem_push && !rsp_mem_tag[0];
+        rsp_mem_tag_stage_1 <= rsp_mem_tag;
+        rsp_mem_q_stage_1 <= rsp_mem_q;
+    end
+    //std_fifo
+    reg decoder_mem_req_fifo_pop;
+    wire [48 + 2 - 1:0] decoder_mem_req_fifo_q;
+    wire decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty;
+    std_fifo #(50, 32) decoder_mem_req_fifo(rst, clk, decoder_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , );
+
     //TODO: x vector cache
-    //TODO: intermediator
-    //TODO: memory stuff
+    wire cache_req_mem;
+    wire [47:0] cache_req_mem_addr;
+    reg cache_rsp_mem_push;
+    wire cache_push_x;
+    wire [63:0] cache_x_val;
+    x_vector_cache cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val);
+
+    always @(posedge clk) begin
+        cache_rsp_mem_push <= rsp_mem_push && rsp_mem_tag[0];
+    end
+
+    reg cache_mem_req_fifo_pop;
+    wire [47:0] cache_mem_req_fifo_q;
+    wire cache_mem_req_fifo_full;
+    wire cache_mem_req_fifo_empty;
+    std_fifo #(48, 32) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , );
+
+    reg mac_input_stage_0;
+    wire [63:0] val_fifo_q;
+    wire val_fifo_full;
+    wire val_fifo_empty;
+    std_fifo #(64, 32) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , );
+
+    wire [31:0] row_fifo_q;
+    wire row_fifo_full;
+    wire row_fifo_empty;
+    std_fifo #(32, 512) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , );
+
+    wire [63:0] x_val_fifo_q;
+    wire x_val_fifo_full;
+    wire x_val_fifo_empty;
+    std_fifo #(64, 32) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , );
+
+    wire mac_push_out;
+    wire [63:0] mac_v_out;
+    reg mac_eof;
+    mac mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof);
+    always @* begin
+        mac_input_stage_0 = !val_fifo_empty && !row_fifo_empty && !x_val_fifo_empty;
+        mac_eof = registers[3][47];
+    end
+
+    always @(posedge clk) begin
+        mac_input_stage_1 <= mac_input_stage_0;
+    end
+
+    reg mac_mem_req_fifo_pop;
+    wire mac_mem_req_fifo_q;
+    wire mac_mem_req_fifo_full;
+    wire mac_mem_req_fifo_empty;
+    std_fifo #(64, 32) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
+
+    always @* begin
+        mac_mem_req_fifo_pop = 0;
+        cache_mem_req_fifo_pop = 0;
+        decoder_mem_req_fifo_pop = 0;
+        if(req_mem_stall) begin
+        end else if(!mac_mem_req_fifo_empty) begin
+            mac_mem_req_fifo_pop = 1;
+        end else if(!cache_mem_req_fifo_empty) begin
+            cache_mem_req_fifo_pop = 1;
+        end else if(!decoder_mem_req_fifo_empty) begin
+            decoder_mem_req_fifo_pop = 1;
+        end
+    end
+    reg mac_mem_req_stage_1;
+    reg cache_mem_req_stage_1;
+    reg decoder_mem_req_stage_1;
+    always @(posedge clk) begin
+        mac_mem_req_stage_1 <= mac_mem_req_fifo_pop;
+        cache_mem_req_stage_1 <= cache_mem_req_fifo_pop;
+        decoder_mem_req_stage_1 <= decoder_mem_req_fifo_pop;
+    end
+
+    always @(posedge clk) begin
+        req_mem_ld <= 0;
+        req_mem_st <= 0;
+        req_mem_addr <= registers[3];
+        req_mem_d_or_tag <= mac_mem_req_fifo_q;
+        if(mac_mem_req_stage_1) begin
+            req_mem_st <= 1;
+            req_mem_addr <= registers[3];
+            req_mem_d_or_tag <= mac_mem_req_fifo_q;
+        end else if(cache_mem_req_stage_1) begin
+            req_mem_ld <= 1;
+            req_mem_addr <= cache_mem_req_fifo_q;
+            req_mem_d_or_tag[0] <= 1;
+        end else if(decoder_mem_req_stage_1) begin
+            req_mem_ld <= 1;
+            req_mem_addr <= decoder_mem_req_fifo_q[49:2];
+            req_mem_d_or_tag[0] <= 0;
+            req_mem_d_or_tag[2:1] <= decoder_mem_req_fifo_q[1:0];
+        end
+    end
+
     `include "common.vh"
 endmodule
