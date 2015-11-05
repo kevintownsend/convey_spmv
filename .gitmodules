@@ -16,3 +16,6 @@
 [submodule "rtl/linked_list_fifo"]
 	path = rtl/linked_list_fifo
 	url = git@github.com:kevintownsend/linked_list_fifo.git
+[submodule "rtl/asymmetric_fifo"]
+	path = rtl/asymmetric_fifo
+	url = git@github.com:kevintownsend/asymmetric_fifo.git
