@@ -19,3 +19,6 @@
 [submodule "rtl/asymmetric_fifo"]
 	path = rtl/asymmetric_fifo
 	url = git@github.com:kevintownsend/asymmetric_fifo.git
+[submodule "rtl/inara-hdl-libraries"]
+	path = rtl/inara-hdl-libraries
+	url = git@github.com:kevintownsend/inara-hdl-libraries.git
