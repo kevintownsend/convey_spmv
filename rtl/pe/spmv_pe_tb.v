@@ -25,7 +25,7 @@ reg req_scratch_stall;
 reg rsp_scratch_push;
 reg [63:0] rsp_scratch_q;
 wire rsp_scratch_stall;
-spmv_pe dut(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
+spmv_pe dut(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
 
 initial begin
     clk = 0;
@@ -33,12 +33,12 @@ initial begin
 end
 
 initial begin
-    #1000 $display("watchdog timer reached");
+    #1000000 $display("watchdog timer reached");
     $finish;
 end
 
     reg [63:0] mock_main_memory [0:100000 - 1];
-    initial $readmemh("example.hex", mock_main_memory);
+
     /*
 struct SmacHeader{
     ull r0;
@@ -61,6 +61,9 @@ struct SmacHeader{
     ull r2[8];
 };
 */
+    initial $readmemh("example.hex", mock_main_memory);
+    wire [63:0] width = mock_main_memory[1];
+    wire [63:0] height = mock_main_memory[2];
     wire [63:0] nnz = mock_main_memory[3];
 
     wire [63:0] spmCodesPtr = mock_main_memory[16];
@@ -71,6 +74,18 @@ struct SmacHeader{
     wire [63:0] fzipCodeStreamPtr = mock_main_memory[21];
     wire [63:0] fzipArgumentStreamPtr = mock_main_memory[22];
     wire [63:0] size = mock_main_memory[23];
+
+    wire [63:0] x_vector_ptr = size;
+    wire [63:0] y_vector_ptr = x_vector_ptr + width * 8;
+    wire [63:0] y_vector_ptr_end = y_vector_ptr + height * 8;
+    integer i;
+    real tmp;
+    initial #1 begin
+        for(i = 0; i < width; i = i + 1) begin
+            tmp = i;
+            mock_main_memory[x_vector_ptr / 8 + i] = $realtobits(tmp);
+        end
+    end
 
     initial begin
         op_in[OPCODE_ARG_PE - 1:0] = OP_RST; //reset
@@ -108,6 +123,7 @@ struct SmacHeader{
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 0;
         op_in[63:OPCODE_ARG_2] = 0;
         #10 op_in = OP_NOP;
+        #100;
         while(busy_out)begin
             #10;
         end
@@ -138,6 +154,7 @@ struct SmacHeader{
         op_in[63:OPCODE_ARG_2] = 0;
         #10;
         op_in = OP_NOP;
+        #100;
         while(busy_out)begin
             #10;
         end
@@ -161,7 +178,7 @@ struct SmacHeader{
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 9;
-        op_in[63:OPCODE_ARG_2] = 2**9*16;
+        op_in[63:OPCODE_ARG_2] = 2**9*16 * 8;
         #10;
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD_COMMON_CODES;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
@@ -169,6 +186,7 @@ struct SmacHeader{
         op_in[63:OPCODE_ARG_2] = 0;
         #10;
         op_in = OP_NOP;
+        #100;
         while(busy_out)begin
             #10;
         end
@@ -176,17 +194,17 @@ struct SmacHeader{
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 0;
-        op_in[63:OPCODE_ARG_2] = nnz - 1;
+        op_in[63:OPCODE_ARG_2] = y_vector_ptr;
         #10;
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 1;
-        op_in[63:OPCODE_ARG_2] = nnz - 1;
+        op_in[63:OPCODE_ARG_2] = y_vector_ptr_end;
         #10;
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 2;
-        op_in[63:OPCODE_ARG_2] = nnz - 1;
+        op_in[63:OPCODE_ARG_2] = x_vector_ptr;
         #10;
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
@@ -243,16 +261,17 @@ struct SmacHeader{
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 13;
         op_in[63:OPCODE_ARG_2] = nnz - 1;
         #10;
-        //TODO: ld
         op_in[OPCODE_ARG_PE - 1:0] = OP_STEADY;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 0;
         op_in[63:OPCODE_ARG_2] = 0;
         #10 op_in = OP_NOP;
-        //TODO: load spm codes
-        //TODO: load fzip codes
-        //TODO: load common codes
-        //TODO: steady state
+        #100;
+        while(busy_out)begin
+            #10;
+        end
+        $display("Done");
+        $finish;
     end
 
     //TODO: memory interface
@@ -261,6 +280,7 @@ struct SmacHeader{
         rsp_mem_tag <= 0;
         rsp_mem_q <= 0;
         if(req_mem_ld) begin
+            //$display("req_mem_ld: %B", req_mem_d_or_tag);
             rsp_mem_push <= 1;
             rsp_mem_tag <= req_mem_d_or_tag;
             rsp_mem_q <= mock_main_memory[req_mem_addr / 8];
@@ -283,12 +303,13 @@ struct SmacHeader{
 
     //TODO: check output
     always @(posedge clk) begin
-        if(req_mem_ld) begin
-            $display("writing to memory");
+        if(req_mem_st) begin
+            $display("writing to memory: addr: %d val: %f", req_mem_addr, $bitstoreal(req_mem_d_or_tag));
         end
     end
 
     always @(posedge clk) begin
+        //$display("req_scratch_ld: %d", req_scratch_ld);
         //$display("state: %d", dut.state);
         /*
         if(dut.state == 1) begin

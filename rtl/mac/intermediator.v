@@ -75,6 +75,19 @@ reg push_store_stage_2;
 
 wire to_store_stage_2_comb = !p1_stage_1 && window_begin[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && !fade_counter[7];
 
+reg [5:0] eof_delay;
+initial eof_delay = 0;
+always @(posedge clk) begin
+    if(eof)
+        eof_delay[4] <= 1;
+    if(eof_delay[4])
+        eof_delay <= eof_delay + 1;
+    if(eof_delay[5])
+        eof_delay[5] <= 0;
+    if(rst)
+        eof_delay <= 0;
+end
+
 always @(posedge clk) begin
     p0_stage_2 <= p0_stage_1;
     r0_stage_2 <= r0_stage_1;
@@ -89,7 +102,7 @@ always @(posedge clk) begin
         window_begin <= window_begin + 1;
         r1_stage_2 <= window_begin;
     end
-    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof) begin
+    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[5]) begin
         $display("incrementing window at %d", $time);
 
         //TODO: raise error if window begin not equal window end

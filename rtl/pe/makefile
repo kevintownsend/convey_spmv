@@ -104,13 +104,16 @@ work:
 sim_x_vector: work $(vsim_x_vector_cache) $(vsim_x_vector_cache_tb) $(vsim_std_fifo)
 	echo -e "vsim work.x_vector_cache_tb\nrun -all" | vsim
 
-sim_spmv_pe: work $(vsim_spmv_pe) $(vsim_spmv_pe_tb) $(vsim_x_vector_cache) $(vsim_std_fifo) $(vsim_variable_length_decoder) $(vsim_argument_decoder) $(vsim_asymmetric_fifo) $(vsim_asymmetric_distributed_ram) $(vsim_stream_decoder) $(vsim_sparse_matrix_decoder) $(vsim_linked_list_fifo) $(vsim_mac) $(vsim_intermediator) $(vsim_dual_port_xor_ram) $(vsim_dual_port_block_ram) $(vsim_FPMultiplier_11_52_11_52_11_52_uid2) $(vsim_FPAdder_11_52_uid2) $(vsim_InputIEEE_11_52_to_11_52) $(vsim_OutputIEEE_11_52_to_11_52) $(vsim_adder_pipe) $(vsim_multiplier_pipe) $(vsim_ieee_to_flopoco) $(vsim_flopoco_to_ieee)
-	echo -e "vsim work.spmv_pe_tb\nrun -all" | vsim
+sim_spmv_pe: work $(vsim_spmv_pe) $(vsim_spmv_pe_tb) $(vsim_x_vector_cache) $(vsim_std_fifo) $(vsim_variable_length_decoder) $(vsim_argument_decoder) $(vsim_asymmetric_fifo) $(vsim_asymmetric_distributed_ram) $(vsim_stream_decoder) $(vsim_sparse_matrix_decoder) $(vsim_linked_list_fifo) $(vsim_mac) $(vsim_intermediator) $(vsim_dual_port_xor_ram) $(vsim_dual_port_block_ram) $(vsim_FPMultiplier_11_52_11_52_11_52_uid2) $(vsim_FPAdder_11_52_uid2) $(vsim_InputIEEE_11_52_to_11_52) $(vsim_OutputIEEE_11_52_to_11_52) $(vsim_adder_pipe) $(vsim_multiplier_pipe) $(vsim_ieee_to_flopoco) $(vsim_flopoco_to_ieee) example.hex
+	echo -e "vsim work.spmv_pe_tb\nset StdArithNoWarnings 1\nset NumericStdNoWarnings 1\nrun -all" | vsim
+
+example.hex: ../../src/example.hex
+	cp ../../src/example.hex .
 
 sim: sim_spmv_pe
 
 vim :
-	vim -p makefile ../decoders/makefile spmv_pe.v spmv_pe_tb.v ../decoders/sparse_matrix_decoder.v x_vector_cache.v x_vector_cache_tb.v
+	vim -p makefile spmv_pe.v spmv_pe_tb.v ../decoders/sparse_matrix_decoder.v x_vector_cache.v x_vector_cache_tb.v ../mac/mac.v
 
 clean:
 	rm -rf work transcript

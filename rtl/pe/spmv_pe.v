@@ -26,7 +26,6 @@ input rsp_scratch_push;
 input [63:0] rsp_scratch_q;
 output rsp_scratch_stall;
 
-
 reg rst, next_rst;
 reg state, next_state;
 localparam IDLE = 0;
@@ -47,6 +46,7 @@ wire decoder_busy;
 reg [63:0] op_r;
 reg busy_r;
 reg mac_input_stage_1;
+    reg mac_mem_req_stage_1;
 always @* begin
     next_rst = 0;
     next_state = state;
@@ -82,6 +82,8 @@ always @* begin
         next_registers[3] = registers[3] - 1;
     if(registers[3][47])
         next_registers[3][47] = 0;
+    if(mac_mem_req_stage_1)
+        next_registers[0] = registers[0] + 8;
 end
 
 
@@ -100,7 +102,8 @@ assign busy_out = busy_r;
     reg decoder_rsp_mem_push;
     reg [2:0] rsp_mem_tag_stage_1;
     reg [63:0] rsp_mem_q_stage_1;
-    wire decoder_rsp_mem_stall;
+    //reg decoder_rsp_mem_stall;
+    wire decoder_mem_req_fifo_almost_full;
     wire decoder_push_index;
     wire [31:0] decoder_row;
     wire [31:0] decoder_col;
@@ -110,7 +113,31 @@ assign busy_out = busy_r;
     reg decoder_stall_val;
     //TODO: finish
 
-    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_fifo_almost_full, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_fifo_almost_full, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_mem_req_fifo_almost_full, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    always @(posedge clk) begin
+        if(decoder_push_index)
+            $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
+        if(decoder_push_val)
+            $display("decoder_push_val: %f", $bitstoreal(decoder_val));
+        /*
+        $display("debug:");
+        $display("registers[6]: %d", decoder.registers[6]);
+        $display("registers[10]: %d", decoder.registers[10]);
+        $display("registers[7]: %d", decoder.registers[7]);
+        $display("registers[11]: %d", decoder.registers[11]);
+        */
+        //$display("stall: %d", decoder_stall_val);
+        /*
+        if(op_r[OPCODE_ARG_PE - 1:0] != OP_NOP)
+            $display("%d:opcode: %d, %d, %d", $time, op_r[OPCODE_ARG_PE - 1:0], op_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE], op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1], op_r[31:OPCODE_ARG_2]);
+        //$display("wtf: %d", decoder_req_mem_ld);
+        //$display("wtf: %d", decoder_busy);
+        if(decoder_rsp_mem_push) begin
+            $display("memory response");
+        end
+        */
+
+    end
 
     always @(posedge clk) begin
         decoder_rsp_mem_push <= rsp_mem_push && !rsp_mem_tag[0];
@@ -121,7 +148,7 @@ assign busy_out = busy_r;
     reg decoder_mem_req_fifo_pop;
     wire [48 + 2 - 1:0] decoder_mem_req_fifo_q;
     wire decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty;
-    std_fifo #(50, 32) decoder_mem_req_fifo(rst, clk, decoder_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , );
+    std_fifo #(50, 32) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_fifo_almost_full);
 
     //TODO: x vector cache
     wire cache_req_mem;
@@ -139,18 +166,23 @@ assign busy_out = busy_r;
     wire [47:0] cache_mem_req_fifo_q;
     wire cache_mem_req_fifo_full;
     wire cache_mem_req_fifo_empty;
-    std_fifo #(48, 32) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , );
+    wire cache_mem_req_fifo_almost_full;
+    std_fifo #(48, 32) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
 
     reg mac_input_stage_0;
     wire [63:0] val_fifo_q;
     wire val_fifo_full;
     wire val_fifo_empty;
-    std_fifo #(64, 32) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , );
+    wire val_fifo_almost_full;
+    std_fifo #(64, 32) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , val_fifo_almost_full);
+    always @* decoder_stall_val = val_fifo_almost_full;
 
     wire [31:0] row_fifo_q;
     wire row_fifo_full;
     wire row_fifo_empty;
-    std_fifo #(32, 512) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , );
+    wire row_fifo_almost_full;
+    std_fifo #(32, 512) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
+    always @* decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
 
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
@@ -160,7 +192,14 @@ assign busy_out = busy_r;
     wire mac_push_out;
     wire [63:0] mac_v_out;
     reg mac_eof;
-    mac mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof);
+    mac #(16) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof);
+    always @(posedge clk) begin
+        if(mac_input_stage_1)
+            $display("mac push in: row: %d v0: %f v1: %f", row_fifo_q, $bitstoreal(val_fifo_q), $bitstoreal(x_val_fifo_q));
+        if(mac_eof)
+            $display("mac_eof");
+
+    end
     always @* begin
         mac_input_stage_0 = !val_fifo_empty && !row_fifo_empty && !x_val_fifo_empty;
         mac_eof = registers[3][47];
@@ -171,7 +210,7 @@ assign busy_out = busy_r;
     end
 
     reg mac_mem_req_fifo_pop;
-    wire mac_mem_req_fifo_q;
+    wire [63:0] mac_mem_req_fifo_q;
     wire mac_mem_req_fifo_full;
     wire mac_mem_req_fifo_empty;
     std_fifo #(64, 32) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
@@ -189,7 +228,6 @@ assign busy_out = busy_r;
             decoder_mem_req_fifo_pop = 1;
         end
     end
-    reg mac_mem_req_stage_1;
     reg cache_mem_req_stage_1;
     reg decoder_mem_req_stage_1;
     always @(posedge clk) begin
@@ -201,11 +239,11 @@ assign busy_out = busy_r;
     always @(posedge clk) begin
         req_mem_ld <= 0;
         req_mem_st <= 0;
-        req_mem_addr <= registers[3];
+        req_mem_addr <= registers[0];
         req_mem_d_or_tag <= mac_mem_req_fifo_q;
         if(mac_mem_req_stage_1) begin
             req_mem_st <= 1;
-            req_mem_addr <= registers[3];
+            req_mem_addr <= registers[0];
             req_mem_d_or_tag <= mac_mem_req_fifo_q;
         end else if(cache_mem_req_stage_1) begin
             req_mem_ld <= 1;
