@@ -12,3 +12,15 @@ $(EXEC):	CnySpmvApp.cpp cpCnySpmv.s
 
 $(SWMODEL): ../Makefile.include ../sim/CaeIsaCnySpmv.cpp
 	make -C ../sim
+
+run: example.smac $(EXEC)
+	run example.smac
+
+vsimrun:
+	run -vsim
+
+vim:
+	vim -p makefile CnySpmvApp.cpp cpCnySpmv.s
+
+example.smac:
+	cp ../../src/smac/example.smac .

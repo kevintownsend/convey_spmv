@@ -11,6 +11,14 @@ cpTalk:
     caep00 $0
     rtn
 
+cpInstructionAE0:
+    .globl  cpInstructionAE0
+    .type   cpInstructionAE0. @function
+    .signature pdk=65042
+	mov.AE0 %a8, $0, %aeg		# a8 contains address of a1
+	caep01.AE0 $0
+    rtn
+
 #TODO: add function
 #TODO: name function
 #   .globl functionName
