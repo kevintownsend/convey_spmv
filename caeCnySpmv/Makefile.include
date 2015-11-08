@@ -4,8 +4,8 @@
 
 # DEFAULT LOCATION FOR DEVELOPMENT
 export CNY_PDK = /opt/convey/pdk
-export CNY_PDK_REV = 2011_11_22
-export CNY_PDK_PLATFORM = hc-1
+export CNY_PDK_REV = 2012_03_19
+export CNY_PDK_PLATFORM = hc-1ex
 
 # Personality can be built with or without a crossbar
 export MC_XBAR = 1
@@ -13,6 +13,7 @@ export MC_XBAR = 1
 # Personality requires read ordering
 export MC_READ_ORDER = 1
 
+USER_VHDL_FILES += ../vhdl/OutputIEEE_11_52_to_11_52.vhdl ../vhdl/InputIEEE_11_52_to_11_52.vhdl ../vhdl/FPAdder_11_52_uid2.vhdl ../vhdl/FPMultiplier_11_52_11_52_11_52_uid2.vhdl
 # Personality supports asynchronous core clock
 #   CLK_PERS_RATIO = 0 for synchronous (default)
 #   CLK_PERS_RATIO = 2 for async frequency between 75 and 300 MHz

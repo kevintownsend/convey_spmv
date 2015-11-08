@@ -1,31 +1,3 @@
-/*****************************************************************************/
-//
-// Module      : cae_pers.v
-// Revision    : $Revision: 1.4.1.4 $
-// Last Modified On: $Date: 2012/03/07 15:41:55 $
-// Last Modified By: $Author: ktown $
-//
-//-----------------------------------------------------------------------------
-//
-// Original Author : gedwards
-// Created On      : Wed Oct 10 09:26:08 2007
-// TODO: add author information
-//-----------------------------------------------------------------------------
-//
-// Description     : CnySpmv personality
-//
-//                   Top-level of CnySpmv personality.  For a complete list of 
-//                   optional ports, see 
-//                   /opt/convey/pdk/<rev>/<platform>/doc/cae_pers.v
-//
-//-----------------------------------------------------------------------------
-//
-// Copyright (c) 2007-2011 : created by Convey Computer Corp. This model is the
-// confidential and proprietary property of Convey Computer Corp.
-//
-/*****************************************************************************/
-/* $Id: cae_pers.v,v 1.4.1.4 2012/03/07 15:41:55 ktown Exp ktown $ */
-
 `timescale 1 ns / 1 ps
 
 `include "pdk_fpga_defines.vh"
@@ -229,8 +201,8 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
    //
    // AEG[0..NA-1] Registers
    //
-    localparam NA = 51;
-    localparam NB = 6;       // Number of bits to represent NAEG
+    localparam NA = 2;
+    localparam NB = 1;       // Number of bits to represent NAEG
 
     assign cae_aeg_cnt = NA;
 
@@ -253,7 +225,7 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
       always @(posedge clk) begin
         if (c_aeg_we) begin
             r_aeg <= cae_data;
-            $display("writing: %x", cae_data);
+            $display("@verilog: writing: %x", cae_data);
         end
         else
             r_aeg <= c_aeg;
@@ -271,8 +243,7 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
       r_ret_val    <= inst_aeg_rd && c_val_aegidx;
       r_ret_data   <= w_aeg[inst_aeg_idx[NB-1:0]];
       r_err_aegidx <= (inst_aeg_wr || inst_aeg_rd) && !c_val_aegidx;
-//TODO: add logic to decide which instructions are implemented
-      r_err_unimpl <= err_unimpl || (inst_val && (inst_caep !== 'd0/* && inst_caep !== 'd1 && inst_caep !== 'd2*/)); 
+      r_err_unimpl <= err_unimpl || (inst_val && (inst_caep !== 'd0 && inst_caep !== 'd1 && inst_caep !== 'd2)); 
    end
    assign cae_ret_data_vld = r_ret_val;
    assign cae_ret_data     = r_ret_data;
@@ -283,140 +254,297 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
    wire r_reset;
    FDSE rst (.C(clk_per),.S(reset_per),.CE(r_reset),.D(!r_reset),.Q(r_reset));
 
-   //logic for using cae IMPORTANT. cae_idle should be 0 when executing a custom instruction and 1 otherwise.
-   //cae_stall should be 1 when when exectuting a custom instruction and 0 otherwise.
-   assign cae_idle  = 1'b1;
-   assign cae_stall = 1'b0;
-
-
    //
    // default state
    //
 assign cae_ring_ctl_out = cae_ring_ctl_in;
 assign cae_ring_data_out = cae_ring_data_in;
 
-assign mc0_req_ld_e = 1'b0;
-assign mc0_req_st_e = 1'b0;
-assign mc0_req_wrd_rdctl_e = 64'd0;
-assign mc0_req_vadr_e = 48'd0;
-assign mc0_req_size_e = 2'd0;
-assign mc0_req_flush_e = 1'b0;
-assign mc0_rsp_stall_e = 1'b0;
-assign mc0_req_ld_o = 1'b0;
-assign mc0_req_st_o = 1'b0;
-assign mc0_req_wrd_rdctl_o = 64'd0;
-assign mc0_req_vadr_o = 48'd0;
-assign mc0_req_size_o = 2'd0;
-assign mc0_req_flush_o = 1'b0;
-assign mc0_rsp_stall_o = 1'b0;
-assign mc1_req_ld_e = 1'b0;
-assign mc1_req_st_e = 1'b0;
-assign mc1_req_wrd_rdctl_e = 64'd0;
-assign mc1_req_vadr_e = 48'd0;
-assign mc1_req_size_e = 2'd0;
-assign mc1_req_flush_e = 1'b0;
-assign mc1_rsp_stall_e = 1'b0;
-assign mc1_req_ld_o = 1'b0;
-assign mc1_req_st_o = 1'b0;
-assign mc1_req_wrd_rdctl_o = 64'd0;
-assign mc1_req_vadr_o = 48'd0;
-assign mc1_req_size_o = 2'd0;
-assign mc1_req_flush_o = 1'b0;
-assign mc1_rsp_stall_o = 1'b0;
-assign mc2_req_ld_e = 1'b0;
-assign mc2_req_st_e = 1'b0;
-assign mc2_req_wrd_rdctl_e = 64'd0;
-assign mc2_req_vadr_e = 48'd0;
-assign mc2_req_size_e = 2'd0;
-assign mc2_req_flush_e = 1'b0;
-assign mc2_rsp_stall_e = 1'b0;
-assign mc2_req_ld_o = 1'b0;
-assign mc2_req_st_o = 1'b0;
-assign mc2_req_wrd_rdctl_o = 64'd0;
-assign mc2_req_vadr_o = 48'd0;
-assign mc2_req_size_o = 2'd0;
-assign mc2_req_flush_o = 1'b0;
-assign mc2_rsp_stall_o = 1'b0;
-assign mc3_req_ld_e = 1'b0;
-assign mc3_req_st_e = 1'b0;
-assign mc3_req_wrd_rdctl_e = 64'd0;
-assign mc3_req_vadr_e = 48'd0;
-assign mc3_req_size_e = 2'd0;
-assign mc3_req_flush_e = 1'b0;
-assign mc3_rsp_stall_e = 1'b0;
-assign mc3_req_ld_o = 1'b0;
-assign mc3_req_st_o = 1'b0;
-assign mc3_req_wrd_rdctl_o = 64'd0;
-assign mc3_req_vadr_o = 48'd0;
-assign mc3_req_size_o = 2'd0;
-assign mc3_req_flush_o = 1'b0;
-assign mc3_rsp_stall_o = 1'b0;
-assign mc4_req_ld_e = 1'b0;
-assign mc4_req_st_e = 1'b0;
-assign mc4_req_wrd_rdctl_e = 64'd0;
-assign mc4_req_vadr_e = 48'd0;
-assign mc4_req_size_e = 2'd0;
-assign mc4_req_flush_e = 1'b0;
-assign mc4_rsp_stall_e = 1'b0;
-assign mc4_req_ld_o = 1'b0;
-assign mc4_req_st_o = 1'b0;
-assign mc4_req_wrd_rdctl_o = 64'd0;
-assign mc4_req_vadr_o = 48'd0;
-assign mc4_req_size_o = 2'd0;
-assign mc4_req_flush_o = 1'b0;
-assign mc4_rsp_stall_o = 1'b0;
-assign mc5_req_ld_e = 1'b0;
-assign mc5_req_st_e = 1'b0;
-assign mc5_req_wrd_rdctl_e = 64'd0;
-assign mc5_req_vadr_e = 48'd0;
-assign mc5_req_size_e = 2'd0;
-assign mc5_req_flush_e = 1'b0;
-assign mc5_rsp_stall_e = 1'b0;
-assign mc5_req_ld_o = 1'b0;
-assign mc5_req_st_o = 1'b0;
-assign mc5_req_wrd_rdctl_o = 64'd0;
-assign mc5_req_vadr_o = 48'd0;
-assign mc5_req_size_o = 2'd0;
-assign mc5_req_flush_o = 1'b0;
-assign mc5_rsp_stall_o = 1'b0;
-assign mc6_req_ld_e = 1'b0;
-assign mc6_req_st_e = 1'b0;
-assign mc6_req_wrd_rdctl_e = 64'd0;
-assign mc6_req_vadr_e = 48'd0;
-assign mc6_req_size_e = 2'd0;
-assign mc6_req_flush_e = 1'b0;
-assign mc6_rsp_stall_e = 1'b0;
-assign mc6_req_ld_o = 1'b0;
-assign mc6_req_st_o = 1'b0;
-assign mc6_req_wrd_rdctl_o = 64'd0;
-assign mc6_req_vadr_o = 48'd0;
-assign mc6_req_size_o = 2'd0;
-assign mc6_req_flush_o = 1'b0;
-assign mc6_rsp_stall_o = 1'b0;
-assign mc7_req_ld_e = 1'b0;
-assign mc7_req_st_e = 1'b0;
-assign mc7_req_wrd_rdctl_e = 64'd0;
-assign mc7_req_vadr_e = 48'd0;
-assign mc7_req_size_e = 2'd0;
-assign mc7_req_flush_e = 1'b0;
-assign mc7_rsp_stall_e = 1'b0;
-assign mc7_req_ld_o = 1'b0;
-assign mc7_req_st_o = 1'b0;
-assign mc7_req_wrd_rdctl_o = 64'd0;
-assign mc7_req_vadr_o = 48'd0;
-assign mc7_req_size_o = 2'd0;
-assign mc7_req_flush_o = 1'b0;
-assign mc7_rsp_stall_o = 1'b0;
+wire [0:15] req_mem_ld;
+wire [0:15] req_mem_st;
+wire [47:0] req_mem_addr [0:15];
+wire [63:0] req_mem_d_or_tag [0:15];
+wire [0:15] req_mem_stall;
+wire [0:15] rsp_mem_push;
+wire [2:0] rsp_mem_tag [0:15];
+wire [63:0] rsp_mem_q [0:15];
+wire [0:15] rsp_mem_stall;
+
+assign mc0_req_ld_e = req_mem_ld[0];
+assign mc0_req_st_e = req_mem_st[0];
+assign mc0_req_size_e = 3;
+assign mc0_req_flush_e = 0;
+assign mc0_req_vadr_e = req_mem_addr[0];
+assign mc0_req_wrd_rdctl_e = req_mem_d_or_tag[0];
+assign req_mem_stall[0] = mc0_rd_rq_stall_e || mc0_wr_rq_stall_e;
+assign rsp_mem_q[0] = mc0_rsp_data_e;
+assign rsp_mem_push[0] = mc0_rsp_push_e;
+assign rsp_mem_tag[0] = mc0_rsp_rdctl_e;
+assign mc0_rsp_stall_e = rsp_mem_stall[0];
+assign mc1_req_ld_e = req_mem_ld[1];
+assign mc1_req_st_e = req_mem_st[1];
+assign mc1_req_size_e = 3;
+assign mc1_req_flush_e = 0;
+assign mc1_req_vadr_e = req_mem_addr[1];
+assign mc1_req_wrd_rdctl_e = req_mem_d_or_tag[1];
+assign req_mem_stall[1] = mc1_rd_rq_stall_e || mc1_wr_rq_stall_e;
+assign rsp_mem_q[1] = mc1_rsp_data_e;
+assign rsp_mem_push[1] = mc1_rsp_push_e;
+assign rsp_mem_tag[1] = mc1_rsp_rdctl_e;
+assign mc1_rsp_stall_e = rsp_mem_stall[1];
+assign mc2_req_ld_e = req_mem_ld[2];
+assign mc2_req_st_e = req_mem_st[2];
+assign mc2_req_size_e = 3;
+assign mc2_req_flush_e = 0;
+assign mc2_req_vadr_e = req_mem_addr[2];
+assign mc2_req_wrd_rdctl_e = req_mem_d_or_tag[2];
+assign req_mem_stall[2] = mc2_rd_rq_stall_e || mc2_wr_rq_stall_e;
+assign rsp_mem_q[2] = mc2_rsp_data_e;
+assign rsp_mem_push[2] = mc2_rsp_push_e;
+assign rsp_mem_tag[2] = mc2_rsp_rdctl_e;
+assign mc2_rsp_stall_e = rsp_mem_stall[2];
+assign mc3_req_ld_e = req_mem_ld[3];
+assign mc3_req_st_e = req_mem_st[3];
+assign mc3_req_size_e = 3;
+assign mc3_req_flush_e = 0;
+assign mc3_req_vadr_e = req_mem_addr[3];
+assign mc3_req_wrd_rdctl_e = req_mem_d_or_tag[3];
+assign req_mem_stall[3] = mc3_rd_rq_stall_e || mc3_wr_rq_stall_e;
+assign rsp_mem_q[3] = mc3_rsp_data_e;
+assign rsp_mem_push[3] = mc3_rsp_push_e;
+assign rsp_mem_tag[3] = mc3_rsp_rdctl_e;
+assign mc3_rsp_stall_e = rsp_mem_stall[3];
+assign mc4_req_ld_e = req_mem_ld[4];
+assign mc4_req_st_e = req_mem_st[4];
+assign mc4_req_size_e = 3;
+assign mc4_req_flush_e = 0;
+assign mc4_req_vadr_e = req_mem_addr[4];
+assign mc4_req_wrd_rdctl_e = req_mem_d_or_tag[4];
+assign req_mem_stall[4] = mc4_rd_rq_stall_e || mc4_wr_rq_stall_e;
+assign rsp_mem_q[4] = mc4_rsp_data_e;
+assign rsp_mem_push[4] = mc4_rsp_push_e;
+assign rsp_mem_tag[4] = mc4_rsp_rdctl_e;
+assign mc4_rsp_stall_e = rsp_mem_stall[4];
+assign mc5_req_ld_e = req_mem_ld[5];
+assign mc5_req_st_e = req_mem_st[5];
+assign mc5_req_size_e = 3;
+assign mc5_req_flush_e = 0;
+assign mc5_req_vadr_e = req_mem_addr[5];
+assign mc5_req_wrd_rdctl_e = req_mem_d_or_tag[5];
+assign req_mem_stall[5] = mc5_rd_rq_stall_e || mc5_wr_rq_stall_e;
+assign rsp_mem_q[5] = mc5_rsp_data_e;
+assign rsp_mem_push[5] = mc5_rsp_push_e;
+assign rsp_mem_tag[5] = mc5_rsp_rdctl_e;
+assign mc5_rsp_stall_e = rsp_mem_stall[5];
+assign mc6_req_ld_e = req_mem_ld[6];
+assign mc6_req_st_e = req_mem_st[6];
+assign mc6_req_size_e = 3;
+assign mc6_req_flush_e = 0;
+assign mc6_req_vadr_e = req_mem_addr[6];
+assign mc6_req_wrd_rdctl_e = req_mem_d_or_tag[6];
+assign req_mem_stall[6] = mc6_rd_rq_stall_e || mc6_wr_rq_stall_e;
+assign rsp_mem_q[6] = mc6_rsp_data_e;
+assign rsp_mem_push[6] = mc6_rsp_push_e;
+assign rsp_mem_tag[6] = mc6_rsp_rdctl_e;
+assign mc6_rsp_stall_e = rsp_mem_stall[6];
+assign mc7_req_ld_e = req_mem_ld[7];
+assign mc7_req_st_e = req_mem_st[7];
+assign mc7_req_size_e = 3;
+assign mc7_req_flush_e = 0;
+assign mc7_req_vadr_e = req_mem_addr[7];
+assign mc7_req_wrd_rdctl_e = req_mem_d_or_tag[7];
+assign req_mem_stall[7] = mc7_rd_rq_stall_e || mc7_wr_rq_stall_e;
+assign rsp_mem_q[7] = mc7_rsp_data_e;
+assign rsp_mem_push[7] = mc7_rsp_push_e;
+assign rsp_mem_tag[7] = mc7_rsp_rdctl_e;
+assign mc7_rsp_stall_e = rsp_mem_stall[7];
+assign mc0_req_ld_o = req_mem_ld[8];
+assign mc0_req_st_o = req_mem_st[8];
+assign mc0_req_size_o = 3;
+assign mc0_req_flush_o = 0;
+assign mc0_req_vadr_o = req_mem_addr[8];
+assign mc0_req_wrd_rdctl_o = req_mem_d_or_tag[8];
+assign req_mem_stall[8] = mc0_rd_rq_stall_o || mc0_wr_rq_stall_o;
+assign rsp_mem_q[8] = mc0_rsp_data_o;
+assign rsp_mem_push[8] = mc0_rsp_push_o;
+assign rsp_mem_tag[8] = mc0_rsp_rdctl_o;
+assign mc0_rsp_stall_o = rsp_mem_stall[8];
+assign mc1_req_ld_o = req_mem_ld[9];
+assign mc1_req_st_o = req_mem_st[9];
+assign mc1_req_size_o = 3;
+assign mc1_req_flush_o = 0;
+assign mc1_req_vadr_o = req_mem_addr[9];
+assign mc1_req_wrd_rdctl_o = req_mem_d_or_tag[9];
+assign req_mem_stall[9] = mc1_rd_rq_stall_o || mc1_wr_rq_stall_o;
+assign rsp_mem_q[9] = mc1_rsp_data_o;
+assign rsp_mem_push[9] = mc1_rsp_push_o;
+assign rsp_mem_tag[9] = mc1_rsp_rdctl_o;
+assign mc1_rsp_stall_o = rsp_mem_stall[9];
+assign mc2_req_ld_o = req_mem_ld[10];
+assign mc2_req_st_o = req_mem_st[10];
+assign mc2_req_size_o = 3;
+assign mc2_req_flush_o = 0;
+assign mc2_req_vadr_o = req_mem_addr[10];
+assign mc2_req_wrd_rdctl_o = req_mem_d_or_tag[10];
+assign req_mem_stall[10] = mc2_rd_rq_stall_o || mc2_wr_rq_stall_o;
+assign rsp_mem_q[10] = mc2_rsp_data_o;
+assign rsp_mem_push[10] = mc2_rsp_push_o;
+assign rsp_mem_tag[10] = mc2_rsp_rdctl_o;
+assign mc2_rsp_stall_o = rsp_mem_stall[10];
+assign mc3_req_ld_o = req_mem_ld[11];
+assign mc3_req_st_o = req_mem_st[11];
+assign mc3_req_size_o = 3;
+assign mc3_req_flush_o = 0;
+assign mc3_req_vadr_o = req_mem_addr[11];
+assign mc3_req_wrd_rdctl_o = req_mem_d_or_tag[11];
+assign req_mem_stall[11] = mc3_rd_rq_stall_o || mc3_wr_rq_stall_o;
+assign rsp_mem_q[11] = mc3_rsp_data_o;
+assign rsp_mem_push[11] = mc3_rsp_push_o;
+assign rsp_mem_tag[11] = mc3_rsp_rdctl_o;
+assign mc3_rsp_stall_o = rsp_mem_stall[11];
+assign mc4_req_ld_o = req_mem_ld[12];
+assign mc4_req_st_o = req_mem_st[12];
+assign mc4_req_size_o = 3;
+assign mc4_req_flush_o = 0;
+assign mc4_req_vadr_o = req_mem_addr[12];
+assign mc4_req_wrd_rdctl_o = req_mem_d_or_tag[12];
+assign req_mem_stall[12] = mc4_rd_rq_stall_o || mc4_wr_rq_stall_o;
+assign rsp_mem_q[12] = mc4_rsp_data_o;
+assign rsp_mem_push[12] = mc4_rsp_push_o;
+assign rsp_mem_tag[12] = mc4_rsp_rdctl_o;
+assign mc4_rsp_stall_o = rsp_mem_stall[12];
+assign mc5_req_ld_o = req_mem_ld[13];
+assign mc5_req_st_o = req_mem_st[13];
+assign mc5_req_size_o = 3;
+assign mc5_req_flush_o = 0;
+assign mc5_req_vadr_o = req_mem_addr[13];
+assign mc5_req_wrd_rdctl_o = req_mem_d_or_tag[13];
+assign req_mem_stall[13] = mc5_rd_rq_stall_o || mc5_wr_rq_stall_o;
+assign rsp_mem_q[13] = mc5_rsp_data_o;
+assign rsp_mem_push[13] = mc5_rsp_push_o;
+assign rsp_mem_tag[13] = mc5_rsp_rdctl_o;
+assign mc5_rsp_stall_o = rsp_mem_stall[13];
+assign mc6_req_ld_o = req_mem_ld[14];
+assign mc6_req_st_o = req_mem_st[14];
+assign mc6_req_size_o = 3;
+assign mc6_req_flush_o = 0;
+assign mc6_req_vadr_o = req_mem_addr[14];
+assign mc6_req_wrd_rdctl_o = req_mem_d_or_tag[14];
+assign req_mem_stall[14] = mc6_rd_rq_stall_o || mc6_wr_rq_stall_o;
+assign rsp_mem_q[14] = mc6_rsp_data_o;
+assign rsp_mem_push[14] = mc6_rsp_push_o;
+assign rsp_mem_tag[14] = mc6_rsp_rdctl_o;
+assign mc6_rsp_stall_o = rsp_mem_stall[14];
+assign mc7_req_ld_o = req_mem_ld[15];
+assign mc7_req_st_o = req_mem_st[15];
+assign mc7_req_size_o = 3;
+assign mc7_req_flush_o = 0;
+assign mc7_req_vadr_o = req_mem_addr[15];
+assign mc7_req_wrd_rdctl_o = req_mem_d_or_tag[15];
+assign req_mem_stall[15] = mc7_rd_rq_stall_o || mc7_wr_rq_stall_o;
+assign rsp_mem_q[15] = mc7_rsp_data_o;
+assign rsp_mem_push[15] = mc7_rsp_push_o;
+assign rsp_mem_tag[15] = mc7_rsp_rdctl_o;
+assign mc7_rsp_stall_o = rsp_mem_stall[15];
+
+   //logic for using cae IMPORTANT. cae_idle should be 0 when executing a custom instruction and 1 otherwise.
+   //cae_stall should be 1 when when exectuting a custom instruction and 0 otherwise.
+   reg core_busy;
+   assign cae_idle  = !core_busy;
+   assign cae_stall = core_busy;
+   //assign cae_idle  = core_busy;
+   //assign cae_stall = !core_busy;
+
 
 
     always @(posedge clk_per) begin
         if(inst_caep == 5'd0 && inst_val) begin
             //TODO: add start logic for custom instruction
             //TODO: if more than one cycle long add cae_idle and cae_stall logic
-            $display("@simulation:Hello World from simulated ae%d", i_aeid);
+            $display("@verilog:Hello World from simulated ae%d", i_aeid);
         end
     end
-   
+
+    reg send_instruction;
+    always @(posedge clk_per) begin
+        send_instruction <= 0;
+        if(inst_caep == 5'd1 && inst_val) begin
+            $display("@verilog:the instruction from simulated ae%d", i_aeid);
+            send_instruction <= 1;
+        end
+    end
+    reg [5:0] min_busy_counter;
+    always @(posedge clk_per) begin
+        if(send_instruction)
+            min_busy_counter[5] <= 1;
+        if(min_busy_counter[5])
+            min_busy_counter <= min_busy_counter + 1;
+        if(reset_per)
+            min_busy_counter <= 32;
+    end
+    wire [0:16] busy_connections;
+    assign busy_connections[0] = 0;
+    always @* core_busy = send_instruction || min_busy_counter[5] || busy_connections[16] || (inst_caep == 5'd1 && inst_val);
+    always @(posedge clk) begin
+        if(core_busy) begin
+            $display("@verilog: core_busy");
+            $display("@verilog: send_instruction: %d, min_busy_counter[5]: %d, busy_connections[16]: %d", send_instruction, min_busy_counter[5], busy_connections[16]);
+        end
+    end
+    wire [63:0] instruction_connections [0:16];
+    reg [63:0] instruction;
+    reg [21:0] watch_dog_timer;
+    always @(posedge clk) begin
+        if(core_busy)
+            watch_dog_timer <= watch_dog_timer + 1;
+        else
+            watch_dog_timer <= 0;
+    end
+    always @(posedge clk_per) begin
+        instruction <= 0;
+        if(send_instruction)
+            instruction <= w_aeg[0];
+        if(reset_per || (min_busy_counter[5] && instruction[2:0] == 1) ||  watch_dog_timer[21]) begin
+            instruction[2:0] <= 1;
+            instruction[7:3] <= 16;
+        end
+    end
+    assign instruction_connections[0] = instruction;
+
+    //TODO: scratch_pad
+    wire [0:15] req_scratch_ld;
+    wire [0:15] req_scratch_st;
+    wire [12:0] req_scratch_addr [0:15];
+    wire [63:0] req_scratch_d [0:15];
+    wire [0:15] req_scratch_stall;
+    wire [0:15] rsp_scratch_push;
+    wire [63:0] rsp_scratch_q [0:15];
+    wire [0:15] rsp_scratch_stall;
+    assign req_scratch_stall[0] = 0;
+    assign rsp_scratch_push[0] = 0;
+    assign rsp_scratch_q[0] = 0;
+
+    spmv_pe g_pe(clk_per, instruction_connections[0], instruction_connections[1], busy_connections[0], busy_connections[1],
+        req_mem_ld[0], req_mem_st[0], req_mem_addr[0], req_mem_d_or_tag[0], req_mem_stall[0], rsp_mem_push[0], rsp_mem_tag[0], rsp_mem_q[0], rsp_mem_stall[0],
+        req_scratch_ld[0], req_scratch_st[0], req_scratch_addr[0], req_scratch_d[0], req_scratch_stall[0], rsp_scratch_push[0], rsp_scratch_q[0], rsp_scratch_stall[0]);
+
+    generate for(g = 1; g < 16; g = g + 1) begin: gen_mem_signals
+        assign req_mem_ld[g] = 0;
+        assign req_mem_st[g] = 0;
+        assign req_mem_addr[g] = 0;
+        assign req_mem_d_or_tag[g] = 0;
+        assign rsp_mem_stall[g] = 0;
+        assign busy_connections[g + 1] = busy_connections[g];
+    end endgenerate
+
+    // synthesis translate_off
+    always @(posedge clk) begin
+        $display("@verilog: cae_pers debug %d", $time);
+        $display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
+        $display("@verilog: response: push %d, stall: %d", mc0_rsp_push_e, mc0_rsp_stall_e);
+    end
+    // synthesis translate_on
+
     /* ---------- debug & synopsys off blocks  ---------- */
 
     // synopsys translate_off

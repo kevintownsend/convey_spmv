@@ -19,6 +19,9 @@ CCaeIsa::InitPers()
     SetAegCnt(MAX_AEG_INDEX);
     SetPersSign(PERS_SIGN_CAE);
 }
+typedef unsigned long long ull;
+
+ull registers[15];
 
 void
 CCaeIsa::CaepInst(int aeId, int opcode, int immed, uint32 inst, uint64 scalar) // F7,0,20-3F
@@ -26,6 +29,10 @@ CCaeIsa::CaepInst(int aeId, int opcode, int immed, uint32 inst, uint64 scalar) /
     switch (opcode) {
         case 0x20: 
             cout << "Hello World from emulated ae" << aeId << endl;
+	        break;
+        case 0x21: 
+            cout << "custom instruction" << aeId << endl;
+
 	        break;
 	    default:
 	        printf("Default case hit - opcode = %x\n", opcode);

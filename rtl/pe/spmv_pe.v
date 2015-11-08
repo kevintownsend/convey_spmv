@@ -15,7 +15,7 @@ input req_mem_stall;
 input rsp_mem_push;
 input [2:0] rsp_mem_tag;
 input [63:0] rsp_mem_q;
-output rsp_mem_stall;
+output reg rsp_mem_stall;
 
 output req_scratch_ld;
 output req_scratch_st;
@@ -33,6 +33,11 @@ localparam STEADY = 1;
 localparam REGISTER_START = 0;
 localparam REGISTER_END = 4;
 reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
+//TODO: wire registers
+wire [47:0] register_0 = registers[0];
+wire [47:0] register_1 = registers[1];
+wire [47:0] register_2 = registers[2];
+wire [47:0] register_3 = registers[3];
 integer i;
 always @(posedge clk) begin
     rst <= next_rst;
@@ -46,13 +51,17 @@ wire decoder_busy;
 reg [63:0] op_r;
 reg busy_r;
 reg mac_input_stage_1;
-    reg mac_mem_req_stage_1;
+reg mac_mem_req_stage_1;
 always @* begin
     next_rst = 0;
     next_state = state;
     busy_status = 0;
-    for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
-        next_registers[i] = registers[i];
+    //for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
+    //    next_registers[i] = registers[i];
+    next_registers[0] = register_0;
+    next_registers[1] = register_1;
+    next_registers[2] = register_2;
+    next_registers[3] = register_3;
     if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
         case(op_r[OPCODE_ARG_PE - 1:0])
             OP_RST: begin
@@ -79,11 +88,12 @@ always @* begin
         end
     endcase
     if(mac_input_stage_1)
-        next_registers[3] = registers[3] - 1;
-    if(registers[3][47])
-        next_registers[3][47] = 0;
+        next_registers[3] = register_3 - 1;
+    if(register_3[47])
+        next_registers[3] = 0;
+    //    next_registers[3][47] = 0;
     if(mac_mem_req_stage_1)
-        next_registers[0] = registers[0] + 8;
+        next_registers[0] = register_0 + 8;
 end
 
 
@@ -98,12 +108,13 @@ assign busy_out = busy_r;
     wire decoder_req_mem_ld;
     wire [47:0] decoder_req_mem_addr;
     wire [1:0] decoder_req_mem_tag;
-    wire decoder_mem_fifo_almost_full;
+    wire decoder_mem_req_fifo_almost_full;
+    reg decoder_mem_req_stall;
     reg decoder_rsp_mem_push;
     reg [2:0] rsp_mem_tag_stage_1;
     reg [63:0] rsp_mem_q_stage_1;
     //reg decoder_rsp_mem_stall;
-    wire decoder_mem_req_fifo_almost_full;
+    wire decoder_rsp_mem_stall;
     wire decoder_push_index;
     wire [31:0] decoder_row;
     wire [31:0] decoder_col;
@@ -112,8 +123,9 @@ assign busy_out = busy_r;
     wire [63:0] decoder_val;
     reg decoder_stall_val;
     //TODO: finish
+    always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
-    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_fifo_almost_full, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_mem_req_fifo_almost_full, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     always @(posedge clk) begin
         if(decoder_push_index)
             $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
@@ -148,7 +160,7 @@ assign busy_out = busy_r;
     reg decoder_mem_req_fifo_pop;
     wire [48 + 2 - 1:0] decoder_mem_req_fifo_q;
     wire decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty;
-    std_fifo #(50, 32) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_fifo_almost_full);
+    std_fifo #(50, 32) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_req_fifo_almost_full);
 
     //TODO: x vector cache
     wire cache_req_mem;
@@ -187,7 +199,8 @@ assign busy_out = busy_r;
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
     wire x_val_fifo_empty;
-    std_fifo #(64, 32) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , );
+    wire x_val_fifo_almost_full;
+    std_fifo #(64, 32) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
 
     wire mac_push_out;
     wire [63:0] mac_v_out;
@@ -202,7 +215,7 @@ assign busy_out = busy_r;
     end
     always @* begin
         mac_input_stage_0 = !val_fifo_empty && !row_fifo_empty && !x_val_fifo_empty;
-        mac_eof = registers[3][47];
+        mac_eof = register_3[47];
     end
 
     always @(posedge clk) begin
@@ -255,7 +268,20 @@ assign busy_out = busy_r;
             req_mem_d_or_tag[0] <= 0;
             req_mem_d_or_tag[2:1] <= decoder_mem_req_fifo_q[1:0];
         end
+        if(rst) begin
+            req_mem_ld <= 0;
+            req_mem_st <= 0;
+        end
     end
+    always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall || x_val_fifo_almost_full;
+    // synthesis translate_off
+    always @(posedge clk) begin
+        $display("@verilog debug spmv_pe @ %d", $time);
+        $display("@verilog state: %d", state);
+        $display("@verilog op_r: %B %B %B %B", op_r[63:12], op_r[11:8], op_r[7:3], op_r[2:0]);
+        $display("@verilog: reset %d", rst);
+    end
+    // synthesis translate_on
 
     `include "common.vh"
 endmodule
