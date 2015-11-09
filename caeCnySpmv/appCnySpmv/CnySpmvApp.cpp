@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
     cerr << "loading commons" << endl;
     loadCommonCodes(0, 0, (((ull)cnyBuffer)) + header.commonDoublesPtr);
     cerr << "done loading commons" << endl;
+    return 0;
 
     //TODO: load registers
     //TODO: run

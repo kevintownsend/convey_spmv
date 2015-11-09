@@ -249,6 +249,31 @@ assign busy_out = busy_r;
         decoder_mem_req_stage_1 <= decoder_mem_req_fifo_pop;
     end
 
+    always @* begin
+        req_mem_ld = 0;
+        req_mem_st = 0;
+        req_mem_addr = registers[0];
+        req_mem_d_or_tag = mac_mem_req_fifo_q;
+        if(mac_mem_req_stage_1) begin
+            req_mem_st = 1;
+            req_mem_addr = registers[0];
+            req_mem_d_or_tag = mac_mem_req_fifo_q;
+        end else if(cache_mem_req_stage_1) begin
+            req_mem_ld = 1;
+            req_mem_addr = cache_mem_req_fifo_q;
+            req_mem_d_or_tag[0] = 1;
+        end else if(decoder_mem_req_stage_1) begin
+            req_mem_ld = 1;
+            req_mem_addr = decoder_mem_req_fifo_q[49:2];
+            req_mem_d_or_tag[0] = 0;
+            req_mem_d_or_tag[2:1] = decoder_mem_req_fifo_q[1:0];
+        end
+        if(rst) begin
+            req_mem_ld = 0;
+            req_mem_st = 0;
+        end
+    end
+    /*
     always @(posedge clk) begin
         req_mem_ld <= 0;
         req_mem_st <= 0;
@@ -273,6 +298,7 @@ assign busy_out = busy_r;
             req_mem_st <= 0;
         end
     end
+    */
     always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall || x_val_fifo_almost_full;
     // synthesis translate_off
     always @(posedge clk) begin
