@@ -100,7 +100,6 @@ int main(int argc, char *argv[])
     cny_cp_memcpy(cnyBuffer, buffer, size);
     double* yVector = (double*)cny_cp_malloc(sizeof(ull) * header.height);
     //loadRegister(0, 0, 0, (ull)yVector);
-    return 0;
 
     cerr << "loading deltas" << endl;
     loadDeltas(0, 0, (((ull)cnyBuffer)) + header.spmCodesPtr);
