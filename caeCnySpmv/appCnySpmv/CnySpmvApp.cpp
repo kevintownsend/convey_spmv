@@ -44,6 +44,7 @@ void loadFzipCodes(int ae, int pe, ull fzipCodes);
 void loadCommonCodes(int ae, int pe, ull commonCodes);
 void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xPtr, ull yPtr);
 void steadyPart2(int ae, int pe);
+void reset(int ae, int pe);
 
 cny_image_t        sig2;
 cny_image_t        sig;
@@ -80,6 +81,8 @@ int main(int argc, char *argv[])
     cerr << "@user:calling coprocessor" << endl;
     copcall_fmt(sig, cpTalk, "");
     cerr << "@user:returned from coprocessor" << endl;
+    //reset
+    reset(0,0);
 
     //TODO: read file(s)
     FILE* smacFile = fopen(argv[1], "r");
@@ -129,9 +132,12 @@ int main(int argc, char *argv[])
     //TODO: load registers
     //TODO: run
 
+
+    reset(0,0);
     free(buffer);
-    free(cnyBuffer);
-    free(yVector);
+    cny_cp_free(cnyBuffer);
+    cny_cp_free(yVector);
+    cny_cp_free(xVector);
     return 0;
 }
 
@@ -210,6 +216,11 @@ void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xP
     loadRegister(ae, pe, 12, matrixHeader.nnz - 1);
     loadRegister(ae, pe, 13, matrixHeader.nnz - 1);
 }
+
+void reset(int ae, int pe){
+    sendInstruction(ae, Instruction(Instruction::RST, pe));
+}
+
 void steadyPart2(int ae, int pe){
     sendInstruction(ae, Instruction(Instruction::STEADY, pe));
 }
