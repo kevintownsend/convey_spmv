@@ -541,6 +541,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     always @(posedge clk) begin
         $display("@verilog: cae_pers debug %d", $time);
         $display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
+        $display("@verilog: request address: %H", mc0_req_vadr_e);
         $display("@verilog: response: push %d, stall: %d", mc0_rsp_push_e, mc0_rsp_stall_e);
     end
     // synthesis translate_on
