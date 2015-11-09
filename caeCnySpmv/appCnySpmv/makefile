@@ -20,6 +20,9 @@ vsimrun: $(EXEC)
 	run -vsim example.smac > vsimRunOutput
 	grep @verilog vsimRunOutput > grepedOutput
 
+runcp: example.smac $(EXEC)
+	runcp example.smac
+
 vim:
 	vim -p makefile CnySpmvApp.cpp cpCnySpmv.s
 
