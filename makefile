@@ -34,8 +34,9 @@ linked_fifo = caeCnySpmv/verilog/linked_fifo.v
 reorder_queue = caeCnySpmv/verilog/reorder_queue.v
 spmv_opcodes = caeCnySpmv/verilog/spmv_opcodes.vh
 constants = caeCnySpmv/verilog/constants.vh
+simple_ram = caeCnySpmv/verilog/simple_ram.v
 
-copy_rtl: $(std_fifo) $(spmv_pe) $(x_vector_cache) $(sparse_matrix_decoder) $(linked_list_fifo) $(argument_decoder) $(stream_decoder) $(variable_length_decoder) $(mac) $(multiplier_pipe) $(adder_pipe) $(intermediator) $(FPAdder_11_52_uid2) $(FPMultiplier_11_52_11_52_11_52_uid2) $(InputIEEE_11_52_to_11_52) $(OutputIEEE_11_52_to_11_52) $(flopoco_to_ieee) $(ieee_to_flopoco) $(dual_port_block_ram) $(dual_port_xor_ram) $(asymmetric_fifo) $(asymmetric_distributed_ram) $(abs) $(log2) $(common) $(scratch_pad) $(omega_network_ff) $(basic_switch_ff) $(linked_fifo) $(reorder_queue) $(spmv_opcodes) $(constants)
+copy_rtl: $(std_fifo) $(spmv_pe) $(x_vector_cache) $(sparse_matrix_decoder) $(linked_list_fifo) $(argument_decoder) $(stream_decoder) $(variable_length_decoder) $(mac) $(multiplier_pipe) $(adder_pipe) $(intermediator) $(FPAdder_11_52_uid2) $(FPMultiplier_11_52_11_52_11_52_uid2) $(InputIEEE_11_52_to_11_52) $(OutputIEEE_11_52_to_11_52) $(flopoco_to_ieee) $(ieee_to_flopoco) $(dual_port_block_ram) $(dual_port_xor_ram) $(asymmetric_fifo) $(asymmetric_distributed_ram) $(abs) $(log2) $(common) $(scratch_pad) $(omega_network_ff) $(basic_switch_ff) $(linked_fifo) $(reorder_queue) $(spmv_opcodes) $(constants) $(simple_ram)
 
 $(vhdl):
 	mkdir caeCnySpmv/vhdl
@@ -136,5 +137,8 @@ $(spmv_opcodes):
 $(constants):
 	cp rtl/inara-hdl-libraries/scratch_pad_b/constants.vh caeCnySpmv/verilog/.
 
+$(simple_ram): rtl/inara-hdl-libraries/common/simple_ram.v
+	cp rtl/inara-hdl-libraries/common/simple_ram.v caeCnySpmv/verilog/.
+
 vim:
-	vim -p makefile caeCnySpmv/sim/CaeIsaCnySpmv.cpp caeCnySpmv/appCnySpmv/CnySpmvApp.cpp caeCnySpmv/verilog/cae_pers.v rtl/std_fifo/std_fifo.v rtl/asymmetric_fifo/asymmetric_fifo.v rtl/ram/asymmetric_distributed_ram.v rtl/decoders/stream_decoder.v rtl/linked_list_fifo/linked_list_fifo.v rtl/pe/spmv_pe.v rtl/decoders/sparse_matrix_decoder.v
+	vim -p makefile rtl/linked_list_fifo/linked_list_fifo.v caeCnySpmv/sim/CaeIsaCnySpmv.cpp caeCnySpmv/appCnySpmv/CnySpmvApp.cpp caeCnySpmv/verilog/cae_pers.v rtl/std_fifo/std_fifo.v rtl/asymmetric_fifo/asymmetric_fifo.v rtl/ram/asymmetric_distributed_ram.v rtl/decoders/stream_decoder.v rtl/linked_list_fifo/linked_list_fifo.v rtl/pe/spmv_pe.v rtl/decoders/sparse_matrix_decoder.v

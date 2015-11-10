@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
 
 #undef DEBUG
 
@@ -42,6 +43,7 @@ void loadRegister(int ae, int pe, int registerAddress, ull value);
 void loadDeltas(int ae, int pe, ull deltas);
 void loadFzipCodes(int ae, int pe, ull fzipCodes);
 void loadCommonCodes(int ae, int pe, ull commonCodes);
+vector<double> check(string mtxFilename, double* xVector);
 void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xPtr, ull yPtr);
 void steadyPart2(int ae, int pe);
 void reset(int ae, int pe);
@@ -55,6 +57,9 @@ int main(int argc, char *argv[])
 //TODO: change number of arguments accepted and add usage message
   if (argc != 2)
       return 1;
+  string argument(argv[1]);
+  cerr << argument << endl;
+  cerr << (argument + ".smac") << endl;
 
   // Get personality signature
   // The "pdk" personality is the PDK sample vadd personality
@@ -85,7 +90,7 @@ int main(int argc, char *argv[])
     reset(0,0);
 
     //TODO: read file(s)
-    FILE* smacFile = fopen(argv[1], "r");
+    FILE* smacFile = fopen((argument + ".smac").c_str(), "r");
     SmacHeader header;
     fread(&header, 8, 32, smacFile);
     fseek(smacFile, 0, SEEK_END);
@@ -126,20 +131,49 @@ int main(int argc, char *argv[])
     steadyPart2(0, 0);
     cerr << "done second part of steady" << endl;
     cerr << "y: " << endl;
-    for(ull i = 0; i < header.height; ++i)
-        cerr << yVector[i] << endl;
-
     //TODO: load registers
     //TODO: run
-
-
     reset(0,0);
+
+    cerr << "checking" << endl;
+    vector<double> goldY = check(argument + "After.mtx", xVector);
+    ull mismatches = 0;
+    for(ull i= 0; i < header.height; ++i){
+        if(yVector[i] != goldY[i]){
+            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
+            mismatches++;
+        }
+    }
+    cerr << "total mismatches: " << mismatches << endl;
     free(buffer);
     cny_cp_free(cnyBuffer);
     cny_cp_free(yVector);
     cny_cp_free(xVector);
     return 0;
 }
+
+vector<double> check(string mtxFilename, double* xVector){
+    FILE* mtxFile = fopen(mtxFilename.c_str(), "r");
+    char line[1000];
+    cerr << "wtf mate" << endl;
+    fgets(line, 1000, mtxFile);
+    cerr << "wtf mate" << endl;
+    ull M, N, nnz;
+    fscanf(mtxFile, "%lld %lld %lld", &M, &N, &nnz);
+    cerr << "dim: " << M << ", " << N << endl;
+    vector<double> ret;
+    ret.resize(M);
+    for(ull i = 0; i < nnz; ++i){
+        ull row, col;
+        double val;
+        fscanf(mtxFile, "%lld %lld %lf", &row, &col, &val);
+        row--; col--;
+        ret[row] += xVector[col] * val;
+    }
+    fclose(mtxFile);
+    return ret;
+}
+
 
 struct Instruction{
     enum operation {

@@ -1,6 +1,8 @@
 module spmv_pe(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
 
 parameter ID = 0;
+parameter SUB_WIDTH = 4;
+parameter SUB_HEIGHT = 4;
 `include "spmv_opcodes.vh"
 input clk;
 input [63:0] op_in;
@@ -25,6 +27,8 @@ input req_scratch_stall;
 input rsp_scratch_push;
 input [63:0] rsp_scratch_q;
 output rsp_scratch_stall;
+
+
 
 reg rst, next_rst;
 reg state, next_state;
@@ -92,7 +96,7 @@ always @* begin
     if(register_3[47])
         next_registers[3] = 0;
     //    next_registers[3][47] = 0;
-    if(mac_mem_req_stage_1)
+    if(mac_mem_req_stage_1 && !registers_equal)
         next_registers[0] = register_0 + 8;
 end
 
@@ -125,7 +129,7 @@ assign busy_out = busy_r;
     //TODO: finish
     always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
-    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4, SUB_WIDTH, SUB_HEIGHT) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     always @(posedge clk) begin
         if(decoder_push_index)
             $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
@@ -168,7 +172,7 @@ assign busy_out = busy_r;
     reg cache_rsp_mem_push;
     wire cache_push_x;
     wire [63:0] cache_x_val;
-    x_vector_cache cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val);
+    x_vector_cache #(SUB_WIDTH) cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val);
 
     always @(posedge clk) begin
         cache_rsp_mem_push <= rsp_mem_push && rsp_mem_tag[0];
@@ -179,33 +183,33 @@ assign busy_out = busy_r;
     wire cache_mem_req_fifo_full;
     wire cache_mem_req_fifo_empty;
     wire cache_mem_req_fifo_almost_full;
-    std_fifo #(48, 32) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
+    std_fifo #(.WIDTH(48), .DEPTH(32), .ALMOST_FULL_COUNT(8)) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
 
     reg mac_input_stage_0;
     wire [63:0] val_fifo_q;
     wire val_fifo_full;
     wire val_fifo_empty;
     wire val_fifo_almost_full;
-    std_fifo #(64, 32) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , val_fifo_almost_full);
+    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , val_fifo_almost_full);
     always @* decoder_stall_val = val_fifo_almost_full;
 
     wire [31:0] row_fifo_q;
     wire row_fifo_full;
     wire row_fifo_empty;
     wire row_fifo_almost_full;
-    std_fifo #(32, 512) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
+    std_fifo #(.WIDTH(32), .DEPTH(512), .ALMOST_FULL_COUNT(8)) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
     always @* decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
 
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
     wire x_val_fifo_empty;
     wire x_val_fifo_almost_full;
-    std_fifo #(64, 32) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
+    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
 
     wire mac_push_out;
     wire [63:0] mac_v_out;
     reg mac_eof;
-    mac #(16) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof);
+    mac #(1024) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof);
     always @(posedge clk) begin
         if(mac_input_stage_1)
             $display("mac push in: row: %d v0: %f v1: %f", row_fifo_q, $bitstoreal(val_fifo_q), $bitstoreal(x_val_fifo_q));
@@ -226,7 +230,9 @@ assign busy_out = busy_r;
     wire [63:0] mac_mem_req_fifo_q;
     wire mac_mem_req_fifo_full;
     wire mac_mem_req_fifo_empty;
-    std_fifo #(64, 32) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
+
+    //std_fifo #(64, 32) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
+    std_fifo #(64, 512) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
 
     always @* begin
         mac_mem_req_fifo_pop = 0;
@@ -249,6 +255,7 @@ assign busy_out = busy_r;
         decoder_mem_req_stage_1 <= decoder_mem_req_fifo_pop;
     end
 
+    /*
     always @* begin
         req_mem_ld = 0;
         req_mem_st = 0;
@@ -273,14 +280,14 @@ assign busy_out = busy_r;
             req_mem_st = 0;
         end
     end
-    /*
+    */
     always @(posedge clk) begin
         req_mem_ld <= 0;
         req_mem_st <= 0;
         req_mem_addr <= registers[0];
         req_mem_d_or_tag <= mac_mem_req_fifo_q;
         if(mac_mem_req_stage_1) begin
-            req_mem_st <= 1;
+            req_mem_st <= !registers_equal;
             req_mem_addr <= registers[0];
             req_mem_d_or_tag <= mac_mem_req_fifo_q;
         end else if(cache_mem_req_stage_1) begin
@@ -298,7 +305,6 @@ assign busy_out = busy_r;
             req_mem_st <= 0;
         end
     end
-    */
     always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall || x_val_fifo_almost_full;
     // synthesis translate_off
     always @(posedge clk) begin

@@ -520,21 +520,36 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     wire [0:15] rsp_scratch_push;
     wire [63:0] rsp_scratch_q [0:15];
     wire [0:15] rsp_scratch_stall;
-    assign req_scratch_stall[0] = 0;
-    assign rsp_scratch_push[0] = 0;
-    assign rsp_scratch_q[0] = 0;
+    wire [13*16-1:0] req_scratch_addr_unrolled;
+    wire [64*16-1:0] req_scratch_d_unrolled;
+    wire [64*16-1:0] rsp_scratch_q_unrolled;
+    generate for(g = 0; g < 16; g = g + 1) begin:scratch_pad_unrolling
+        assign req_scratch_addr_unrolled[(16-g)*13 - 1 -: 13] = req_scratch_addr[g];
+        assign req_scratch_d_unrolled[(16-g)*64 - 1 -: 64] = req_scratch_d[g];
+        assign rsp_scratch_q[g] = rsp_scratch_q_unrolled[(16-g)*64 -1 -:64];
+    end endgenerate
 
-    spmv_pe g_pe(clk_per, instruction_connections[0], instruction_connections[1], busy_connections[0], busy_connections[1],
-        req_mem_ld[0], req_mem_st[0], req_mem_addr[0], req_mem_d_or_tag[0], req_mem_stall[0], rsp_mem_push[0], rsp_mem_tag[0], rsp_mem_q[0], rsp_mem_stall[0],
-        req_scratch_ld[0], req_scratch_st[0], req_scratch_addr[0], req_scratch_d[0], req_scratch_stall[0], rsp_scratch_push[0], rsp_scratch_q[0], rsp_scratch_stall[0]);
+    scratch_pad #(16, 64, 512, 64) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
-    generate for(g = 1; g < 16; g = g + 1) begin: gen_mem_signals
+    localparam PE_COUNT = 1;
+    generate for(g = 0; g < PE_COUNT; g = g + 1) begin: gen_pe
+    spmv_pe g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
+        req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
+        req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
+    end endgenerate
+
+    generate for(g = PE_COUNT; g < 16; g = g + 1) begin: gen_mem_signals
         assign req_mem_ld[g] = 0;
         assign req_mem_st[g] = 0;
         assign req_mem_addr[g] = 0;
         assign req_mem_d_or_tag[g] = 0;
         assign rsp_mem_stall[g] = 0;
         assign busy_connections[g + 1] = busy_connections[g];
+        assign req_scratch_ld[g] = 0;
+        assign req_scratch_st[g] = 0;
+        assign req_scratch_addr[g] = 0;
+        assign req_scratch_d[g] = 0;
+        assign rsp_scratch_stall[g] = 0;
     end endgenerate
 
     // synthesis translate_off

@@ -14,14 +14,14 @@ $(SWMODEL): ../Makefile.include ../sim/CaeIsaCnySpmv.cpp
 	make -C ../sim
 
 run: example.smac $(EXEC)
-	run example.smac
+	run ../../src/smac/example
 
 vsimrun: $(EXEC)
-	run -vsim example.smac > vsimRunOutput
+	run -vsim ../../src/smac/example > vsimRunOutput
 	grep @verilog vsimRunOutput > grepedOutput
 
 runcp: example.smac $(EXEC)
-	runcp example.smac
+	runcp ../../src/smac/example
 
 vim:
 	vim -p makefile CnySpmvApp.cpp cpCnySpmv.s
