@@ -19,3 +19,6 @@
 [submodule "rtl/inara-hdl-libraries"]
 	path = rtl/inara-hdl-libraries
 	url = git@github.com:kevintownsend/inara-hdl-libraries.git
+[submodule "rtl/linked_list_fifo"]
+	path = rtl/linked_list_fifo
+	url = git@github.com:kevintownsend/linked_list_fifo.git
