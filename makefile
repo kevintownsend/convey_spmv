@@ -116,7 +116,7 @@ $(log2):
 $(common):
 	cp rtl/common/common.vh caeCnySpmv/verilog/.
 
-$(scratch_pad):
+$(scratch_pad): rtl/inara-hdl-libraries/scratch_pad_b/scratch_pad.v
 	cp rtl/inara-hdl-libraries/scratch_pad_b/scratch_pad.v caeCnySpmv/verilog/.
 
 $(omega_network_ff):

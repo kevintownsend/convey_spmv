@@ -512,7 +512,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     assign instruction_connections[0] = instruction;
 
     //TODO: scratch_pad
-    localparam SCRATCH_PAD_PORTS = 32;
+    localparam SCRATCH_PAD_PORTS = 16;
     wire [0:SCRATCH_PAD_PORTS - 1] req_scratch_ld;
     wire [0:SCRATCH_PAD_PORTS - 1] req_scratch_st;
     wire [12:0] req_scratch_addr [0:SCRATCH_PAD_PORTS - 1];
@@ -530,7 +530,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         assign rsp_scratch_q[g] = rsp_scratch_q_unrolled[(SCRATCH_PAD_PORTS-g)*64 -1 -:64];
     end endgenerate
 
-    scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 512) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
+    scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
     localparam PE_COUNT = 1;
     generate for(g = 0; g < PE_COUNT; g = g + 1) begin: gen_pe
