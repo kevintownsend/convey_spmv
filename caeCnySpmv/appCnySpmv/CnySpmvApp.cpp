@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     cerr << "y: " << endl;
     //TODO: load registers
     //TODO: run
-    reset(0,0);
+    //reset(0,0);
 
     cerr << "checking" << endl;
     vector<double> goldY = check(argument + "After.mtx", xVector);

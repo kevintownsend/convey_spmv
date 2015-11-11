@@ -204,7 +204,7 @@ assign busy_out = busy_r;
     wire x_val_fifo_full;
     wire x_val_fifo_empty;
     wire x_val_fifo_almost_full;
-    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
+    std_fifo #(.WIDTH(64), .DEPTH(512), .ALMOST_FULL_COUNT(10)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
 
     wire mac_push_out;
     wire [63:0] mac_v_out;
@@ -305,7 +305,7 @@ assign busy_out = busy_r;
             req_mem_st <= 0;
         end
     end
-    always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall || x_val_fifo_almost_full;
+    always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall;// || x_val_fifo_almost_full;
     // synthesis translate_off
     always @(posedge clk) begin
         $display("@verilog debug spmv_pe @ %d", $time);
