@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include "tardis/tardis.h"
 
 #undef DEBUG
 
@@ -128,7 +129,9 @@ int main(int argc, char *argv[])
     cerr << "data begin: " << hex << ((ull)cnyBuffer) << " end: " << ((ull)cnyBuffer + header.size) << " x: " << ((ull)xVector) << endl;
     cerr << dec;
     cerr << "second part of steady" << endl;
+    stealTardis();
     steadyPart2(0, 0);
+    returnTardis();
     cerr << "done second part of steady" << endl;
     cerr << "y: " << endl;
     //TODO: load registers
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
     ull mismatches = 0;
     for(ull i= 0; i < header.height; ++i){
         if(yVector[i] != goldY[i]){
-            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
+            //cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
             mismatches++;
         }
     }
@@ -227,11 +230,11 @@ void loadFzipCodes(int ae, int pe, ull fzipCodes){
 }
 void loadCommonCodes(int ae, int pe, ull commonCodes){
     loadRegister(ae, pe, 4, commonCodes);
-    loadRegister(ae, pe, 8, (ull)commonCodes + (ull)(8*pow((double)2, (double)9)));
-    //loadRegister(ae, pe, 8, (ull)commonCodes + (ull)(8*pow((double)2, (double)13)));
+    //loadRegister(ae, pe, 8, (ull)commonCodes + (ull)(8*pow((double)2, (double)9)));
+    loadRegister(ae, pe, 8, (ull)commonCodes + (ull)(8*pow((double)2, (double)13)));
     loadRegister(ae, pe, 5, 0);
-    loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)9)));
-    //loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)13)));
+    //loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)9)));
+    loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)13)));
     sendInstruction(ae, Instruction(Instruction::LD_COMMON_CODES, pe));
 }
 void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xPtr, ull yPtr){

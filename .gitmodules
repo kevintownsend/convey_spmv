@@ -22,3 +22,6 @@
 [submodule "rtl/linked_list_fifo"]
 	path = rtl/linked_list_fifo
 	url = git@github.com:kevintownsend/linked_list_fifo.git
+[submodule "caeCnySpmv/appCnySpmv/tardis"]
+	path = caeCnySpmv/appCnySpmv/tardis
+	url = git@github.com:kevintownsend/tardis.git

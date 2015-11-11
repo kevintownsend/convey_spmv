@@ -8,7 +8,7 @@ clean:
 	make --directory=../sim clean
 
 $(EXEC):	CnySpmvApp.cpp cpCnySpmv.s
-	cnyCC -g CnySpmvApp.cpp cpCnySpmv.s -o CnySpmvApp.exe
+	cnyCC -lrt -g CnySpmvApp.cpp cpCnySpmv.s tardis/tardis.o -o CnySpmvApp.exe
 
 $(SWMODEL): ../Makefile.include ../sim/CaeIsaCnySpmv.cpp
 	make -C ../sim
@@ -24,7 +24,7 @@ runcp: example.smac $(EXEC)
 	runcp ../../src/smac/example
 
 vim:
-	vim -p makefile CnySpmvApp.cpp cpCnySpmv.s
+	vim -p makefile CnySpmvApp.cpp cpCnySpmv.s tardis/tardis.h
 
 example.smac:
 	cp ../../src/smac/example.smac .
