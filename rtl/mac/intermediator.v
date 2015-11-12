@@ -102,7 +102,7 @@ always @(posedge clk) begin
         window_begin <= window_begin + 1;
         r1_stage_2 <= window_begin;
     end
-    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[5]) begin
+    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[10]) begin
         $display("incrementing window at %d", $time);
 
         //TODO: raise error if window begin not equal window end

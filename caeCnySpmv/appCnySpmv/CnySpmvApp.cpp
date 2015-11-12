@@ -142,8 +142,8 @@ int main(int argc, char *argv[])
     vector<double> goldY = check(argument + "After.mtx", xVector);
     ull mismatches = 0;
     for(ull i= 0; i < header.height; ++i){
-        if(yVector[i] != goldY[i]){
-            //cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
+        if(yVector[i]*1.1 + 0.001 < goldY[i] || yVector[i]*.9 - 0.001 > goldY[i]){
+            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
             mismatches++;
         }
     }

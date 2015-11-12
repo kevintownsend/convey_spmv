@@ -61,7 +61,7 @@ struct SmacHeader{
     ull r2[8];
 };
 */
-    initial $readmemh("example.hex", mock_main_memory);
+    initial $readmemh("cant0.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
     wire [63:0] height = mock_main_memory[2];
     wire [63:0] nnz = mock_main_memory[3];

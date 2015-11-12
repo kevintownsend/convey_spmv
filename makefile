@@ -65,7 +65,7 @@ $(stream_decoder): rtl/decoders/stream_decoder.v
 $(variable_length_decoder): rtl/decoders/variable_length_decoder.v
 	cp rtl/decoders/variable_length_decoder.v caeCnySpmv/verilog/.
 
-$(mac):
+$(mac): rtl/mac/mac.v
 	cp rtl/mac/mac.v caeCnySpmv/verilog/.
 
 $(multiplier_pipe):
@@ -74,7 +74,7 @@ $(multiplier_pipe):
 $(adder_pipe):
 	cp rtl/mac/adder_pipe.v caeCnySpmv/verilog/.
 
-$(intermediator):
+$(intermediator): rtl/mac/intermediator.v
 	cp rtl/mac/intermediator.v caeCnySpmv/verilog/.
 
 $(FPAdder_11_52_uid2): $(vhdl)
