@@ -25,7 +25,7 @@ reg req_scratch_stall;
 reg rsp_scratch_push;
 reg [63:0] rsp_scratch_q;
 wire rsp_scratch_stall;
-spmv_pe dut(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
+spmv_pe #(0, 8, 512) dut(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
 
 initial begin
     clk = 0;
@@ -33,7 +33,7 @@ initial begin
 end
 
 initial begin
-    #10000000 $display("watchdog timer reached");
+    #1000000 $display("watchdog timer reached");
     $finish;
 end
 
@@ -61,7 +61,7 @@ struct SmacHeader{
     ull r2[8];
 };
 */
-    initial $readmemh("cant0.hex", mock_main_memory);
+    initial $readmemh("example.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
     wire [63:0] height = mock_main_memory[2];
     wire [63:0] nnz = mock_main_memory[3];
