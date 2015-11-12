@@ -56,13 +56,13 @@ $(sparse_matrix_decoder): rtl/decoders/sparse_matrix_decoder.v
 $(linked_list_fifo): rtl/linked_list_fifo/linked_list_fifo.v
 	cp rtl/linked_list_fifo/linked_list_fifo.v caeCnySpmv/verilog/.
 
-$(argument_decoder):
+$(argument_decoder): rtl/decoders/argument_decoder.v
 	cp rtl/decoders/argument_decoder.v caeCnySpmv/verilog/.
 
 $(stream_decoder): rtl/decoders/stream_decoder.v
 	cp rtl/decoders/stream_decoder.v caeCnySpmv/verilog/.
 
-$(variable_length_decoder):
+$(variable_length_decoder): rtl/decoders/variable_length_decoder.v
 	cp rtl/decoders/variable_length_decoder.v caeCnySpmv/verilog/.
 
 $(mac):
