@@ -532,7 +532,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
 
     scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
-    localparam PE_COUNT = 1;
+    localparam PE_COUNT = 16;
     generate for(g = 0; g < PE_COUNT; g = g + 1) begin: gen_pe
     spmv_pe #(g) g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
         req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],

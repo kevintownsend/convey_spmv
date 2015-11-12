@@ -38,7 +38,6 @@ CCaeIsa::CaepInst(int aeId, int opcode, int immed, uint32 inst, uint64 scalar) /
 	        printf("Default case hit - opcode = %x\n", opcode);
 	        for (int aeId = 0; aeId < CAE_AE_CNT; aeId += 1)
 		        SetException(aeId, AEUIE);
-	    
     }
 }
 

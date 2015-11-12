@@ -300,7 +300,7 @@ assign busy_out = busy_r;
             req_mem_d_or_tag[0] <= 0;
             req_mem_d_or_tag[2:1] <= decoder_mem_req_fifo_q[1:0];
         end
-        if(rst) begin
+        if(rst || !busy_r) begin
             req_mem_ld <= 0;
             req_mem_st <= 0;
         end
