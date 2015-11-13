@@ -97,7 +97,6 @@ $(vsim_ieee_to_flopoco): ../mac/ieee_to_flopoco.v work
 $(vsim_flopoco_to_ieee): ../mac/flopoco_to_ieee.v work
 	vlog ../mac/flopoco_to_ieee.v +incdir+../common
 
-
 work:
 	vlib work
 

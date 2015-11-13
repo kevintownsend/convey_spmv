@@ -128,7 +128,7 @@ $(basic_switch_ff):
 $(linked_fifo):
 	cp rtl/inara-hdl-libraries/linked_fifo/linked_fifo.v caeCnySpmv/verilog/.
 
-$(reorder_queue):
+$(reorder_queue): rtl/inara-hdl-libraries/reorder_queue/reorder_queue.v
 	cp rtl/inara-hdl-libraries/reorder_queue/reorder_queue.v caeCnySpmv/verilog/.
 
 $(spmv_opcodes):
