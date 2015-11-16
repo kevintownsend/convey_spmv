@@ -33,7 +33,7 @@ initial begin
 end
 
 initial begin
-    #1000000 $display("watchdog timer reached");
+    #10000000 $display("watchdog timer reached");
     $finish;
 end
 
@@ -276,15 +276,35 @@ struct SmacHeader{
     end
 
     //TODO: memory interface
+    localparam MEMORY_LATENCY = 8;
+    reg rsp_mem_push_latency [0:MEMORY_LATENCY];
+    reg [2:0] rsp_mem_tag_latency [0:MEMORY_LATENCY];
+    reg [63:0] rsp_mem_q_latency [0:MEMORY_LATENCY];
     always @(posedge clk) begin
         rsp_mem_push <= 0;
         rsp_mem_tag <= 0;
         rsp_mem_q <= 0;
+        /*
         if(req_mem_ld) begin
-            //$display("req_mem_ld: %B", req_mem_d_or_tag);
             rsp_mem_push <= 1;
             rsp_mem_tag <= req_mem_d_or_tag;
             rsp_mem_q <= mock_main_memory[req_mem_addr / 8];
+        end
+        */
+        rsp_mem_push_latency[0] <= req_mem_ld;
+        rsp_mem_tag_latency[0] <= req_mem_d_or_tag;
+        rsp_mem_q_latency[0] <= mock_main_memory[req_mem_addr / 8];
+        for(i = 0; i < MEMORY_LATENCY; i = i + 1) begin
+            rsp_mem_push_latency[i + 1] <= rsp_mem_push_latency[i];
+            rsp_mem_tag_latency[i + 1] <= rsp_mem_tag_latency[i];
+            rsp_mem_q_latency[i + 1] <= rsp_mem_q_latency[i];
+        end
+        rsp_mem_push <= rsp_mem_push_latency[MEMORY_LATENCY];
+        rsp_mem_tag <= rsp_mem_tag_latency[MEMORY_LATENCY];
+        rsp_mem_q <= rsp_mem_q_latency[MEMORY_LATENCY];
+        if(rsp_mem_stall) begin
+            $display("rsp_mem_stall reached.");
+            $finish;
         end
     end
     reg [63:0] mock_scratch_pad [0:512*16 - 1];
