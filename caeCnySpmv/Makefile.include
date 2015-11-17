@@ -15,7 +15,7 @@ export MC_READ_ORDER = 1
 
 #NICE		?= nice -n0
 
-XILINX_XST_OPTIONS += -equivalent_register_removal no
+#XILINX_XST_OPTIONS += -equivalent_register_removal no
 
 XILINX_MAP_OPTIONS += -register_duplication on
 XILINX_THREADS += 4

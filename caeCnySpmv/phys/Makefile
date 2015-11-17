@@ -1,7 +1,7 @@
 # Makefile $Header: /cvs/cae_vadd/phys/Makefile,v 1.6 2010/12/15 20:27:48 gedwards Exp $
 
 
-#CNY_PDK_PHYS_DIR ?= .
+CNY_PDK_PHYS_DIR ?= ../phys_constraints
 
 ####################################################################
 # Include Convey Makefile Template
