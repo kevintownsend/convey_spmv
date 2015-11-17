@@ -15,6 +15,10 @@ using namespace std;
 //TODO: replace with new assembly function
 extern "C" void cpTalk();
 extern "C" void cpInstructionAE0();
+extern "C" void cpInstructionAE1();
+extern "C" void cpInstructionAE2();
+extern "C" void cpInstructionAE3();
+extern "C" void cpInstructionAEall();
 
 typedef unsigned long long ull;
 
@@ -48,6 +52,9 @@ vector<double> check(string mtxFilename, double* xVector);
 void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xPtr, ull yPtr);
 void steadyPart2(int ae, int pe);
 void reset(int ae, int pe);
+void resetAll();
+
+char charBuffer[100];
 
 cny_image_t        sig2;
 cny_image_t        sig;
@@ -56,7 +63,7 @@ int main(int argc, char *argv[])
     cerr << "staring program" << endl;
   // check command line args
 //TODO: change number of arguments accepted and add usage message
-  if (argc != 2)
+  if (argc < 2)
       return 1;
   string argument(argv[1]);
   cerr << argument << endl;
@@ -88,7 +95,8 @@ int main(int argc, char *argv[])
     copcall_fmt(sig, cpTalk, "");
     cerr << "@user:returned from coprocessor" << endl;
     //reset
-    reset(0,0);
+    //reset(0,0);
+    resetAll();
 
     //TODO: read file(s)
     FILE* smacFile = fopen((argument + ".smac").c_str(), "r");
@@ -102,6 +110,7 @@ int main(int argc, char *argv[])
     cerr << "size: " << size << endl;
     void* buffer = malloc(size);
     fread(buffer, 1, size, smacFile);
+    fclose(smacFile);
 
     //TODO: move data to coprocessor
     void* cnyBuffer = cny_cp_malloc(size);
@@ -113,43 +122,112 @@ int main(int argc, char *argv[])
     for(ull i = 0; i < header.width; ++i)
         xVector[i] = 1.0;
     //loadRegister(0, 0, 0, (ull)yVector);
-
-    cerr << "loading deltas" << endl;
-    loadDeltas(0, 0, (((ull)cnyBuffer)) + header.spmCodesPtr);
-    cerr << "done loading deltas" << endl;
-    cerr << "loading fzip codes" << endl;
-    loadFzipCodes(0, 0, (((ull)cnyBuffer)) + header.fzipCodesPtr);
-    cerr << "done loading fzip codes" << endl;
-    cerr << "loading commons" << endl;
-    loadCommonCodes(0, 0, (((ull)cnyBuffer)) + header.commonDoublesPtr);
-    cerr << "done loading commons" << endl;
-    cerr << "first part of steady" << endl;
-    steadyPart1(0, 0, (ull)cnyBuffer, header, (ull)xVector, (ull)yVector);
-    cerr << "done first part of steady" << endl;
-    cerr << "data begin: " << hex << ((ull)cnyBuffer) << " end: " << ((ull)cnyBuffer + header.size) << " x: " << ((ull)xVector) << endl;
-    cerr << dec;
-    cerr << "second part of steady" << endl;
-    stealTardis();
-    steadyPart2(0, 0);
-    returnTardis();
-    cerr << "done second part of steady" << endl;
-    cerr << "y: " << endl;
-    //TODO: load registers
-    //TODO: run
-    //reset(0,0);
+    if(argc < 3){
+        cerr << "loading deltas" << endl;
+        loadDeltas(0, 0, (((ull)cnyBuffer)) + header.spmCodesPtr);
+        cerr << "done loading deltas" << endl;
+        cerr << "loading fzip codes" << endl;
+        loadFzipCodes(0, 0, (((ull)cnyBuffer)) + header.fzipCodesPtr);
+        cerr << "done loading fzip codes" << endl;
+        cerr << "loading commons" << endl;
+        loadCommonCodes(0, 0, (((ull)cnyBuffer)) + header.commonDoublesPtr);
+        cerr << "done loading commons" << endl;
+        cerr << "first part of steady" << endl;
+        steadyPart1(0, 0, (ull)cnyBuffer, header, (ull)xVector, (ull)yVector);
+        cerr << "done first part of steady" << endl;
+        cerr << "data begin: " << hex << ((ull)cnyBuffer) << " end: " << ((ull)cnyBuffer + header.size) << " x: " << ((ull)xVector) << endl;
+        cerr << dec;
+        cerr << "second part of steady" << endl;
+        stealTardis();
+        steadyPart2(0, 0);
+        returnTardis();
+        cerr << "done second part of steady" << endl;
+        cerr << "y: " << endl;
+        //TODO: load registers
+        //TODO: run
+        //reset(0,0);
+    }
 
     cerr << "checking" << endl;
     vector<double> goldY = check(argument + "After.mtx", xVector);
     ull mismatches = 0;
     for(ull i= 0; i < header.height; ++i){
-        if(yVector[i]*1.1 + 0.001 < goldY[i] || yVector[i]*.9 - 0.001 > goldY[i]){
+        if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
             cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
             mismatches++;
+            /*
+            if(goldY[i] > -0.001 && yVector[i] > -0.001 && goldY[i] < 0.001 && yVector[i] < 0.001){}
+            else{
+            }
+            */
         }
     }
-    cerr << "total mismatches: " << mismatches << endl;
+    cerr << "total mismatches: " << mismatches << " percent: " << endl;
     free(buffer);
     cny_cp_free(cnyBuffer);
+
+
+    if(argc > 2){
+        int number = atoi(argv[2]);
+        vector<void *> cnyBufferVector;
+        vector<void *> bufferVector;
+        bufferVector.resize(number);
+        cnyBufferVector.resize(number);
+        ull yStart = 0;
+
+        cerr << "second arg" << number << endl;
+        for(int i = 0; i < number; ++i){
+            sprintf(charBuffer, "%s%d.smac", argument.c_str(), i);
+            cerr << "opening : " << string(charBuffer) << endl;
+            smacFile = fopen(charBuffer, "r");
+            header;
+            fread(&header, 8, 32, smacFile);
+            fseek(smacFile, 0, SEEK_END);
+            size2 = ftell(smacFile);
+            cerr << "size2: " << size2 << endl;
+            rewind(smacFile);
+            size = header.size;
+            cerr << "size: " << size << endl;
+            buffer = malloc(size);
+            bufferVector[i] = buffer;
+            fread(buffer, 1, size, smacFile);
+            fclose(smacFile);
+            cnyBuffer = cny_cp_malloc(size);
+            cnyBufferVector[i] = cnyBuffer;
+            cerr << "cnyBuffer: " << hex << ((ull)cnyBuffer) << endl;
+            cerr << dec;
+            cny_cp_memcpy(cnyBuffer, buffer, size);
+
+            cerr << "loading deltas" << endl;
+            loadDeltas(i / 16, i % 16, (((ull)cnyBuffer)) + header.spmCodesPtr);
+            cerr << "done loading deltas" << endl;
+            cerr << "loading fzip codes" << endl;
+            loadFzipCodes(i / 16, i % 16, (((ull)cnyBuffer)) + header.fzipCodesPtr);
+            cerr << "done loading fzip codes" << endl;
+            cerr << "loading commons" << endl;
+            loadCommonCodes(i / 16, i % 16, (((ull)cnyBuffer)) + header.commonDoublesPtr);
+            cerr << "done loading commons" << endl;
+            cerr << "first part of steady" << endl;
+            steadyPart1(i / 16, i % 16, (ull)cnyBuffer, header, (ull)xVector, (ull)yVector + yStart * 8);
+            cerr << "done first part of steady" << endl;
+            cerr << "data begin: " << hex << ((ull)cnyBuffer) << " end: " << ((ull)cnyBuffer + header.size) << " x: " << ((ull)xVector) << endl;
+            cerr << dec;
+            //free(buffer);
+            //cny_cp_free(cnyBuffer);
+            yStart + header.height;
+        }
+        cerr << "second part of steady" << endl;
+        stealTardis();
+        //steadyPart2(4, 16);
+        steadyPart2(0, 1);
+        returnTardis();
+        cerr << "done second part of steady" << endl;
+        for(int i = 0; i < number; ++i){
+            free(bufferVector[i]);
+            cny_cp_free(cnyBufferVector[i]);
+        }
+    }
+
     cny_cp_free(yVector);
     cny_cp_free(xVector);
     return 0;
@@ -205,7 +283,19 @@ struct Instruction{
     */
 };
 void sendInstruction(int ae, Instruction i){
-    copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
+    switch(ae){
+        case 0:copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
+          break;
+        case 1:copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
+          break;
+        case 2:copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
+          break;
+        case 3:copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
+          break;
+        case 4:copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
+          break;
+        default: break;
+    }
 }
 
 void loadRegister(int ae, int pe, int registerAddress, void* value){
@@ -256,6 +346,14 @@ void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xP
 
 void reset(int ae, int pe){
     sendInstruction(ae, Instruction(Instruction::RST, pe));
+}
+
+void resetAll(){
+    sendInstruction(4, Instruction(Instruction::RST, 16));
+    for(int i = 0; i < 14; ++i){
+        loadRegister(4, 16, i, 0);
+    }
+    sendInstruction(4, Instruction(Instruction::RST, 16));
 }
 
 void steadyPart2(int ae, int pe){
