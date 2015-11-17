@@ -1,4 +1,4 @@
-module intermediator(clk, rst, wr0, row0, v0, wr1, row1, v1, push_to_adder, row_to_adder, v0_to_adder, v1_to_adder, push_to_y, v_to_y, eof);
+module intermediator(clk, rst, wr0, row0, v0, wr1, row1, v1, push_to_adder, row_to_adder, v0_to_adder, v1_to_adder, push_to_y, v_to_y, eof, stall);
 parameter INTERMEDIATOR_DEPTH = 1024;
 parameter LOG2_INTERMEDIATOR_DEPTH = log2(INTERMEDIATOR_DEPTH - 1);
 input clk, rst, wr0;
@@ -14,6 +14,7 @@ output [65:0] v1_to_adder;
 output push_to_y;
 output [65:0] v_to_y;
 input eof;
+output stall;
 
 reg p0_stage_0;
 reg [65:0] v0_stage_0;
@@ -43,6 +44,8 @@ reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r1_stage_1;
 reg [65:0] v1_stage_1;
 reg row_cmp_stage_1;
 
+reg multiplier_overflow_fifo_pop_delay;
+wire [64 + LOG2_INTERMEDIATOR_DEPTH - 1:0] multiplier_overflow_fifo_q;
 always @(posedge clk) begin
     p0_stage_1 <= p0_stage_0;
     r0_stage_1 <= r0_stage_0;
@@ -55,6 +58,11 @@ always @(posedge clk) begin
         p0_stage_1 <= 0;
         p1_stage_1 <= 0;
         row_cmp_stage_1 <= 1;
+    end
+    if(multiplier_overflow_fifo_pop_delay) begin
+        p0_stage_1 <= 1;
+        r0_stage_1 <= multiplier_overflow_fifo_q[LOG2_INTERMEDIATOR_DEPTH - 1:0];
+        v0_stage_1 <= multiplier_overflow_fifo_q[64 + LOG2_INTERMEDIATOR_DEPTH - 1 -:64];
     end
 end
 
@@ -88,6 +96,19 @@ always @(posedge clk) begin
         eof_delay <= 0;
 end
 
+reg window_closed;
+always @(posedge clk) window_closed <= window_begin == window_end;
+reg multiplier_overflow_fifo_push;
+wire multiplier_overflow_fifo_empty;
+wire overflow_fifo_half_full;
+always @* multiplier_overflow_fifo_push = p0_stage_1 && ((!window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1]) || overflow_fifo_half_full);
+reg multiplier_overflow_fifo_pop;
+always @* multiplier_overflow_fifo_pop = !multiplier_overflow_fifo_empty && window_closed && !wr0;
+always @(posedge clk) multiplier_overflow_fifo_pop_delay <= multiplier_overflow_fifo_pop;
+std_fifo #(64 + LOG2_INTERMEDIATOR_DEPTH, 32) multiplier_overflow_fifo(rst, clk, multiplier_overflow_fifo_push, multiplier_overflow_fifo_pop, {v0_stage_1, r0_stage_1}, multiplier_overflow_fifo_q, , multiplier_overflow_fifo_empty, , , );
+assign stall = !multiplier_overflow_fifo_empty;
+//TODO: complete
+
 always @(posedge clk) begin
     p0_stage_2 <= p0_stage_1;
     r0_stage_2 <= r0_stage_1;
@@ -102,10 +123,18 @@ always @(posedge clk) begin
         window_begin <= window_begin + 1;
         r1_stage_2 <= window_begin;
     end
-    if(r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[10]) begin
+    if(multiplier_overflow_fifo_push)
+        p0_stage_2 <= 0;
+    if(window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[10]) begin
         $display("incrementing window at %d", $time);
-
         //TODO: raise error if window begin not equal window end
+        if(window_begin != window_end) begin
+            $display("ERROR advancing too soon");
+            $display("window_begin: %B", window_begin);
+            $display("window_end: %B", window_end);
+            //$finish;
+        end
+
         fade_counter[7] <= 1;
         window_end[LOG2_INTERMEDIATOR_DEPTH - 1] <= !window_end[LOG2_INTERMEDIATOR_DEPTH - 1];
     end
@@ -241,7 +270,7 @@ wire [LOG2_INTERMEDIATOR_DEPTH - 1:0] overflow_fifo_q_row_stage_6 = overflow_fif
 wire [65:0] overflow_fifo_q_value0_stage_6 = overflow_fifo_q_stage_6[66 + LOG2_INTERMEDIATOR_DEPTH - 1 -:66];
 wire [65:0] overflow_fifo_q_value1_stage_6 = overflow_fifo_q_stage_6[66 + 66 + LOG2_INTERMEDIATOR_DEPTH - 1 -:66];
 
-std_fifo #(66 + 66 + LOG2_INTERMEDIATOR_DEPTH, 32) overflow_fifo(rst, clk, p0_stage_6, overflow_fifo_pop_stage_5, {v0_second_stage_6, v0_stage_6, r0_stage_6}, overflow_fifo_q_stage_6, , overflow_fifo_empty, , , );
+std_fifo #(.WIDTH(66 + 66 + LOG2_INTERMEDIATOR_DEPTH), .DEPTH(32), .ALMOST_FULL_COUNT(16)) overflow_fifo(rst, clk, p0_stage_6, overflow_fifo_pop_stage_5, {v0_second_stage_6, v0_stage_6, r0_stage_6}, overflow_fifo_q_stage_6, , overflow_fifo_empty, , , overflow_fifo_half_full);
 
 reg to_adder_stage_7;
 reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] row_to_adder_stage_7;

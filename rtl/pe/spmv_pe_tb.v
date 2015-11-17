@@ -32,8 +32,16 @@ initial begin
     forever #5 clk = !clk;
 end
 
+    integer i;
 initial begin
     #10000000 $display("watchdog timer reached");
+    $display("registers:");
+    for(i = 0; i < 4; i = i + 1) begin
+        $display("%d: %d", i, dut.registers[i]);
+    end
+    for(i = 4; i < 14; i = i + 1) begin
+        $display("%d: %d", i, dut.registers[i]);
+    end
     $finish;
 end
 
@@ -79,7 +87,6 @@ struct SmacHeader{
     wire [63:0] x_vector_ptr = size;
     wire [63:0] y_vector_ptr = x_vector_ptr + width * 8;
     wire [63:0] y_vector_ptr_end = y_vector_ptr + height * 8;
-    integer i;
     real tmp;
     initial #1 begin
         for(i = 0; i < width; i = i + 1) begin

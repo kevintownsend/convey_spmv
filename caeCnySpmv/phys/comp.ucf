@@ -1,0 +1,123 @@
+#
+# Start global assignments
+#
+CONFIG DCI_CASCADE = "24 23 22 21 20 25 26 27 28";
+CONFIG DCI_CASCADE = "34 33 32 31 30 35 36 37 38";
+
+# PLL's/BUFG's
+
+# reset synchronizer flops - put by reset BUFG
+INST "ae_top/io/sync0/meta1" LOC = "SLICE_X172Y201";
+INST "ae_top/io/sync0/q" LOC = "SLICE_X172Y201";
+INST "ae_top/io/ext_reset/rp0/q" LOC = "SLICE_X173Y201";
+
+# csr_reset synchronizer flops - put by csr_reset BUFG
+INST "ae_top/io/sync1/meta1" LOC = "SLICE_X172Y202";
+INST "ae_top/io/sync1/q" LOC = "SLICE_X172Y202";
+
+INST "ae_top/io/rstbufg" LOC = "BUFGCTRL_X0Y31";
+#INST "ae_top/io/csrrstbufg" LOC = "BUFGCTRL_X0Y30";
+INST "ae_top/io/clk200buf" LOC = "BUFGCTRL_X0Y29";
+INST "ae_top/io/pll2ckfb" LOC = "BUFGCTRL_X0Y28";
+#INST "spare1" LOC = "BUFGCTRL_X0Y27";
+#INST "ae_top/io/sraerx/bufg" LOC = "BUFGCTRL_X0Y26";
+#INST "ae_top/io/prvaerx/bufg" LOC = "BUFGCTRL_X0Y25";
+#INST "ae_top/io/nxtaerx/bufg" LOC = "BUFGCTRL_X0Y24";
+INST "ae_top/io/mc7s/bufg" LOC = "BUFGCTRL_X0Y23";
+INST "ae_top/io/mc7di/bufg" LOC = "BUFGCTRL_X0Y22";
+INST "ae_top/io/mc6s/bufg" LOC = "BUFGCTRL_X0Y21";
+INST "ae_top/io/mc6di/bufg" LOC = "BUFGCTRL_X0Y20";
+INST "ae_top/io/mc5s/bufg" LOC = "BUFGCTRL_X0Y19";
+INST "ae_top/io/mc5di/bufg" LOC = "BUFGCTRL_X0Y18";
+INST "ae_top/io/mc4s/bufg" LOC = "BUFGCTRL_X0Y17";
+INST "ae_top/io/mc4di/bufg" LOC = "BUFGCTRL_X0Y16";
+
+INST "ae_top/io/pll2" LOC = "MMCM_ADV_X0Y10";
+
+INST "ae_top/io/dcm_csr/DCM_ADV_INST" LOC = "MMCM_ADV_X0Y9";
+INST "ae_top/io/pll" LOC = "MMCM_ADV_X0Y8";
+
+INST "ae_top/io/mc0di/bufg" LOC = "BUFGCTRL_X0Y15";
+INST "ae_top/io/mc0s/bufg" LOC = "BUFGCTRL_X0Y14";
+INST "ae_top/io/mc1di/bufg" LOC = "BUFGCTRL_X0Y13";
+INST "ae_top/io/mc1s/bufg" LOC = "BUFGCTRL_X0Y12";
+INST "ae_top/io/mc2di/bufg" LOC = "BUFGCTRL_X0Y11";
+INST "ae_top/io/mc2s/bufg" LOC = "BUFGCTRL_X0Y10";
+INST "ae_top/io/mc3di/bufg" LOC = "BUFGCTRL_X0Y9";
+INST "ae_top/io/mc3s/bufg" LOC = "BUFGCTRL_X0Y8";
+INST "ae_top/io/aehd/bufg" LOC = "BUFGCTRL_X0Y7";
+INST "ae_top/io/aehinst/bufg" LOC = "BUFGCTRL_X0Y6";
+INST "ae_top/io/pllckfb" LOC = "BUFGCTRL_X0Y5";
+INST "ae_top/io/dcm_csr/CLK0_BUFG_INST" LOC = "BUFGCTRL_X0Y4";
+INST "ae_top/io/clk2xbuf" LOC = "BUFGCTRL_X0Y3";
+INST "ae_top/io/clkpbuf" LOC = "BUFGCTRL_X0Y2";
+#INST "spare2" LOC = "BUFGCTRL_X0Y1";
+INST "ae_top/io/clkcsrbuf" LOC = "BUFGCTRL_X0Y0";
+
+INST "ae_top/io/ext_reset" AREA_GROUP = "AG_disp";
+
+INST "ae_top/io/stb_ctl" AREA_GROUP = "AG_disp";
+
+INST "ae_top/io/aehtx" AREA_GROUP = "AG_disp";
+INST "ae_top/io/aehalgn" AREA_GROUP = "AG_disp";
+INST "ae_top/io/aehinst" AREA_GROUP = "AG_disp";
+INST "ae_top/io/aehd" AREA_GROUP = "AG_disp";
+
+INST "ae_top/csr_intf" AREA_GROUP = "AG_disp";
+
+#
+# End global assignments
+#
+
+#
+# Start dispatch block assignments
+#
+INST "ae_top/core/disp" AREA_GROUP = "AG_disp";
+AREA_GROUP "AG_disp" RANGE = SLICE_X144Y160:SLICE_X187Y199;
+
+# AEH Input Instruction FIFO BRAM
+INST "ae_top/core/disp/aeh_in/aeh_iq/BU2/U0/blk_mem_generator/valid.cstr/ramloop[0].ram.r/v6_noinit.ram/SDP.SIMPLE_PRIM36.ram" LOC = RAMB36_X4Y36;
+
+# AEH Input Data FIFO BRAM
+INST "ae_top/core/disp/aeh_in/aeh_dq/BU2/U0/blk_mem_generator/valid.cstr/ramloop[0].ram.r/v6_noinit.ram/SDP.SIMPLE_PRIM36.ram" LOC = RAMB36_X4Y35;
+INST "ae_top/core/disp/aeh_in/aeh_dq/BU2/U0/blk_mem_generator/valid.cstr/ramloop[1].ram.r/v6_noinit.ram/SDP.SIMPLE_PRIM36.ram" LOC = RAMB36_X4Y34;
+
+#
+# End dispatch block assignments
+#
+
+#
+# Start mc_csr0 block assignments (MC0/1)
+#
+INST "ae_top/core/mc_csr0" AREA_GROUP = "AG_mc_csr0";
+AREA_GROUP "AG_mc_csr0" RANGE=SLICE_X180Y70:SLICE_X191Y89 ;
+#
+# End mc_csr0 block assignments
+#
+
+#
+# Start mc_csr1 block assignments (MC2/3)
+#
+INST "ae_top/core/mc_csr1" AREA_GROUP = "AG_mc_csr1";
+AREA_GROUP "AG_mc_csr1" RANGE=SLICE_X140Y70:SLICE_X151Y89 ;
+#
+# End mc_csr0 block assignments
+#
+
+#
+# Start mc_csr2 block assignments (MC4/5)
+#
+INST "ae_top/core/mc_csr2" AREA_GROUP = "AG_mc_csr2";
+AREA_GROUP "AG_mc_csr2" RANGE=SLICE_X180Y270:SLICE_X191Y289 ;
+#
+# End mc_csr2 block assignments
+#
+
+#
+# Start mc_csr3 block assignments (MC6/7)
+#
+INST "ae_top/core/mc_csr3" AREA_GROUP = "AG_mc_csr3";
+AREA_GROUP "AG_mc_csr3" RANGE=SLICE_X140Y270:SLICE_X151Y289 ;
+#
+# End mc_csr3 block assignments
+#

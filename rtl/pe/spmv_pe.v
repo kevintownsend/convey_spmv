@@ -185,6 +185,7 @@ assign busy_out = busy_r;
     wire cache_mem_req_fifo_almost_full;
     std_fifo #(.WIDTH(48), .DEPTH(32), .ALMOST_FULL_COUNT(8)) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
 
+    wire mac_stall;
     reg mac_input_stage_0;
     wire [63:0] val_fifo_q;
     wire val_fifo_full;
@@ -209,7 +210,7 @@ assign busy_out = busy_r;
     wire mac_push_out;
     wire [63:0] mac_v_out;
     reg mac_eof;
-    mac #(1024) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof);
+    mac #(1024) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof, mac_stall);
     always @(posedge clk) begin
         if(mac_input_stage_1)
             $display("mac push in: row: %d v0: %f v1: %f", row_fifo_q, $bitstoreal(val_fifo_q), $bitstoreal(x_val_fifo_q));
@@ -218,7 +219,7 @@ assign busy_out = busy_r;
 
     end
     always @* begin
-        mac_input_stage_0 = !val_fifo_empty && !row_fifo_empty && !x_val_fifo_empty;
+        mac_input_stage_0 = !val_fifo_empty && !row_fifo_empty && !x_val_fifo_empty && !mac_stall;
         mac_eof = register_3[47];
     end
 
@@ -307,12 +308,14 @@ assign busy_out = busy_r;
     end
     always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall;// || x_val_fifo_almost_full;
     // synthesis translate_off
+/*
     always @(posedge clk) begin
         $display("@verilog debug spmv_pe @ %d", $time);
         $display("@verilog state: %d", state);
         $display("@verilog op_r: %B %B %B %B", op_r[63:12], op_r[11:8], op_r[7:3], op_r[2:0]);
         $display("@verilog: reset %d", rst);
     end
+    */
     // synthesis translate_on
 
     `include "common.vh"
