@@ -353,6 +353,8 @@ void resetAll(){
     for(int i = 0; i < 14; ++i){
         loadRegister(4, 16, i, 0);
     }
+    loadRegister(4, 16, 12, (ull)-1LL);
+    loadRegister(4, 16, 13, (ull)-1LL);
     sendInstruction(4, Instruction(Instruction::RST, 16));
 }
 

@@ -66,23 +66,6 @@ always @* begin
     next_registers[1] = register_1;
     next_registers[2] = register_2;
     next_registers[3] = register_3;
-    if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
-        case(op_r[OPCODE_ARG_PE - 1:0])
-            OP_RST: begin
-                next_rst = 1;
-                next_state = 0;
-            end
-            OP_STEADY: begin
-                next_state = STEADY;
-            end
-            OP_LD: begin
-                for(i = REGISTER_START; i < REGISTER_END; i = i + 1) begin
-                    if(i == op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
-                        next_registers[i] = op_r[63:OPCODE_ARG_2];
-                end
-            end
-        endcase
-    end
     busy_status = decoder_busy;
     case(state)
         STEADY: begin
@@ -98,6 +81,27 @@ always @* begin
     //    next_registers[3][47] = 0;
     if(mac_mem_req_stage_1 && !registers_equal)
         next_registers[0] = register_0 + 8;
+    if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
+        case(op_r[OPCODE_ARG_PE - 1:0])
+            OP_RST: begin
+                next_rst = 1;
+                next_state = 0;
+            end
+            OP_STEADY: begin
+                next_state = STEADY;
+                $display("@verilog: %m going to steady state");
+                for(i = REGISTER_START; i < REGISTER_END; i = i + 1) begin
+                    $display("@verilog: r[%d] = %d", i, registers[i]);
+                end
+            end
+            OP_LD: begin
+                for(i = REGISTER_START; i < REGISTER_END; i = i + 1) begin
+                    if(i == op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
+                        next_registers[i] = op_r[63:OPCODE_ARG_2];
+                end
+            end
+        endcase
+    end
 end
 
 
@@ -135,8 +139,9 @@ assign busy_out = busy_r;
             $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
         if(decoder_push_val)
             $display("decoder_push_val: %f", $bitstoreal(decoder_val));
+        $display("@verilog: %m debug:");
+        $display("@verilog: state: %d stall: %d", state, busy_status);
         /*
-        $display("debug:");
         $display("registers[6]: %d", decoder.registers[6]);
         $display("registers[10]: %d", decoder.registers[10]);
         $display("registers[7]: %d", decoder.registers[7]);
@@ -192,14 +197,20 @@ assign busy_out = busy_r;
     wire val_fifo_empty;
     wire val_fifo_almost_full;
     std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , val_fifo_almost_full);
-    always @* decoder_stall_val = val_fifo_almost_full;
+    always @(posedge clk) decoder_stall_val <= val_fifo_almost_full;
 
     wire [31:0] row_fifo_q;
     wire row_fifo_full;
     wire row_fifo_empty;
     wire row_fifo_almost_full;
     std_fifo #(.WIDTH(32), .DEPTH(512), .ALMOST_FULL_COUNT(8)) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
-    always @* decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
+    reg cache_mem_req_fifo_almost_full_r, row_fifo_almost_full_r;
+    always @(posedge clk) begin
+        //decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
+        cache_mem_req_fifo_almost_full_r <= cache_mem_req_fifo_almost_full;
+        row_fifo_almost_full_r <= row_fifo_almost_full;
+        decoder_stall_index <= cache_mem_req_fifo_almost_full_r || row_fifo_almost_full_r;
+    end
 
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
