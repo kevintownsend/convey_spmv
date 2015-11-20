@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
         cerr << "second part of steady" << endl;
         stealTardis();
         //steadyPart2(4, 16);
-        steadyPart2(0, 1);
+        steadyPart2(4, 16);
         returnTardis();
         cerr << "done second part of steady" << endl;
         for(int i = 0; i < number; ++i){
