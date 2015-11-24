@@ -35,8 +35,9 @@ reorder_queue = caeCnySpmv/verilog/reorder_queue.v
 spmv_opcodes = caeCnySpmv/verilog/spmv_opcodes.vh
 constants = caeCnySpmv/verilog/constants.vh
 simple_ram = caeCnySpmv/verilog/simple_ram.v
+smac = caeCnySpmv/verilog/smac.vh
 
-copy_rtl: $(std_fifo) $(spmv_pe) $(x_vector_cache) $(sparse_matrix_decoder) $(linked_list_fifo) $(argument_decoder) $(stream_decoder) $(variable_length_decoder) $(mac) $(multiplier_pipe) $(adder_pipe) $(intermediator) $(FPAdder_11_52_uid2) $(FPMultiplier_11_52_11_52_11_52_uid2) $(InputIEEE_11_52_to_11_52) $(OutputIEEE_11_52_to_11_52) $(flopoco_to_ieee) $(ieee_to_flopoco) $(dual_port_block_ram) $(dual_port_xor_ram) $(asymmetric_fifo) $(asymmetric_distributed_ram) $(abs) $(log2) $(common) $(scratch_pad) $(omega_network_ff) $(basic_switch_ff) $(linked_fifo) $(reorder_queue) $(spmv_opcodes) $(constants) $(simple_ram)
+copy_rtl: $(std_fifo) $(spmv_pe) $(x_vector_cache) $(sparse_matrix_decoder) $(linked_list_fifo) $(argument_decoder) $(stream_decoder) $(variable_length_decoder) $(mac) $(multiplier_pipe) $(adder_pipe) $(intermediator) $(FPAdder_11_52_uid2) $(FPMultiplier_11_52_11_52_11_52_uid2) $(InputIEEE_11_52_to_11_52) $(OutputIEEE_11_52_to_11_52) $(flopoco_to_ieee) $(ieee_to_flopoco) $(dual_port_block_ram) $(dual_port_xor_ram) $(asymmetric_fifo) $(asymmetric_distributed_ram) $(abs) $(log2) $(common) $(scratch_pad) $(omega_network_ff) $(basic_switch_ff) $(linked_fifo) $(reorder_queue) $(spmv_opcodes) $(constants) $(simple_ram) $(smac)
 
 $(vhdl):
 	mkdir caeCnySpmv/vhdl
@@ -133,6 +134,9 @@ $(reorder_queue): rtl/inara-hdl-libraries/reorder_queue/reorder_queue.v
 
 $(spmv_opcodes):
 	cp rtl/decoders/spmv_opcodes.vh caeCnySpmv/verilog/.
+
+$(smac): rtl/decoders/smac.vh
+	cp rtl/decoders/smac.vh caeCnySpmv/verilog/.
 
 $(constants):
 	cp rtl/inara-hdl-libraries/scratch_pad_b/constants.vh caeCnySpmv/verilog/.
