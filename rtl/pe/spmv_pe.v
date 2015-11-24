@@ -1,8 +1,9 @@
 module spmv_pe(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
 
 parameter ID = 0;
-parameter SUB_WIDTH = 8;
-parameter SUB_HEIGHT = 512;
+//parameter SUB_WIDTH = 8;
+//parameter SUB_HEIGHT = 512;
+`include "smac.vh"
 `include "spmv_opcodes.vh"
 input clk;
 input [63:0] op_in;
@@ -133,7 +134,7 @@ assign busy_out = busy_r;
     //TODO: finish
     always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
-    sparse_matrix_decoder #(ID, 4, SUB_WIDTH, SUB_HEIGHT) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     always @(posedge clk) begin
         if(decoder_push_index)
             $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);

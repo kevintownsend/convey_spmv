@@ -2,6 +2,7 @@ module spmv_pe_tb;
 
 parameter ID = 0;
 `include "spmv_opcodes.vh"
+`include "smac.vh"
 reg clk;
 reg [63:0] op_in;
 wire [63:0] op_out;
@@ -25,7 +26,7 @@ reg req_scratch_stall;
 reg rsp_scratch_push;
 reg [63:0] rsp_scratch_q;
 wire rsp_scratch_stall;
-spmv_pe #(0, 8, 512) dut(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
+spmv_pe #(0) dut(clk, op_in, op_out, busy_in, busy_out, req_mem_ld, req_mem_st, req_mem_addr, req_mem_d_or_tag, req_mem_stall, rsp_mem_push, rsp_mem_tag, rsp_mem_q, rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall);
 
 initial begin
     clk = 0;
@@ -124,7 +125,7 @@ struct SmacHeader{
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
         op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 9;
-        op_in[63:OPCODE_ARG_2] = 2**7*8;
+        op_in[63:OPCODE_ARG_2] = 2**9*8;
         #10;
         op_in[OPCODE_ARG_PE - 1:0] = OP_LD_DELTA_CODES;
         op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
@@ -347,4 +348,5 @@ struct SmacHeader{
         end
         */
     end
+    `include "common.vh"
 endmodule
