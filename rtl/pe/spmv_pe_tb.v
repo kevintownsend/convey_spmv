@@ -70,9 +70,9 @@ struct SmacHeader{
     ull r2[8];
 };
 */
-    //initial $readmemh("cant0.hex", mock_main_memory);
+    initial $readmemh("cant0.hex", mock_main_memory);
     //initial $readmemh("example.hex", mock_main_memory);
-    initial $readmemh("example2.hex", mock_main_memory);
+    //initial $readmemh("example2.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
     wire [63:0] height = mock_main_memory[2];
     wire [63:0] nnz = mock_main_memory[3];
@@ -97,9 +97,9 @@ struct SmacHeader{
         end
     end
     reg [63:0] gold_result [0:1000000];
-    //initial $readmemh("cant0Result.hex", gold_result);
+    initial $readmemh("cant0Result.hex", gold_result);
     //initial $readmemh("exampleResult.hex", gold_result);
-    initial $readmemh("example2Result.hex", gold_result);
+    //initial $readmemh("example2Result.hex", gold_result);
 
     initial begin
         op_in[OPCODE_ARG_PE - 1:0] = OP_RST; //reset

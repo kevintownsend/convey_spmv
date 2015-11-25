@@ -101,12 +101,12 @@ always @(posedge clk) window_closed <= window_begin == window_end;
 reg multiplier_overflow_fifo_push;
 wire multiplier_overflow_fifo_empty;
 wire overflow_fifo_half_full;
-always @* multiplier_overflow_fifo_push = p0_stage_1 && ((!window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1]) || overflow_fifo_half_full);
+always @* multiplier_overflow_fifo_push = p0_stage_1 && ((!window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1]));
 reg multiplier_overflow_fifo_pop;
 always @* multiplier_overflow_fifo_pop = !multiplier_overflow_fifo_empty && window_closed && !wr0;
 always @(posedge clk) multiplier_overflow_fifo_pop_delay <= multiplier_overflow_fifo_pop;
 std_fifo #(66 + LOG2_INTERMEDIATOR_DEPTH, 32) multiplier_overflow_fifo(rst, clk, multiplier_overflow_fifo_push, multiplier_overflow_fifo_pop, {v0_stage_1, r0_stage_1}, multiplier_overflow_fifo_q, , multiplier_overflow_fifo_empty, , , );
-assign stall = !multiplier_overflow_fifo_empty;
+assign stall = !multiplier_overflow_fifo_empty || overflow_fifo_half_full;
 //TODO: complete
 
 always @(posedge clk) begin
@@ -127,6 +127,8 @@ always @(posedge clk) begin
         p0_stage_2 <= 0;
     if(window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[10]) begin
         $display("incrementing window at %d", $time);
+        $display("p0: %d %d", p0_stage_1, r0_stage_1);
+        $display("multiplier_overflow_fifo.count: %d", multiplier_overflow_fifo.count);
         //TODO: raise error if window begin not equal window end
         if(window_begin != window_end) begin
             $display("ERROR advancing too soon");
@@ -138,6 +140,7 @@ always @(posedge clk) begin
         fade_counter[7] <= 1;
         window_end[LOG2_INTERMEDIATOR_DEPTH - 1] <= !window_end[LOG2_INTERMEDIATOR_DEPTH - 1];
     end
+    //TODO: raise error if adder input not in the red or yellow window
     if(fade_counter[7])
         fade_counter <= fade_counter + 1;
     if(rst) begin
