@@ -1,4 +1,4 @@
-module intermediator(clk, rst, wr0, row0, v0, wr1, row1, v1, push_to_adder, row_to_adder, v0_to_adder, v1_to_adder, push_to_y, v_to_y, eof, stall);
+module intermediator(clk, rst, wr0, row0, v0, wr1, row1, v1, push_to_adder, row_to_adder, v0_to_adder, v1_to_adder, push_to_y, v_to_y, eof, stall, stall_out);
 parameter INTERMEDIATOR_DEPTH = 1024;
 parameter LOG2_INTERMEDIATOR_DEPTH = log2(INTERMEDIATOR_DEPTH - 1);
 input clk, rst, wr0;
@@ -15,6 +15,7 @@ output push_to_y;
 output [65:0] v_to_y;
 input eof;
 output stall;
+input stall_out;
 
 reg p0_stage_0;
 reg [65:0] v0_stage_0;
@@ -81,7 +82,9 @@ reg [65:0] v1_stage_2;
 reg row_cmp_stage_2;
 reg push_store_stage_2;
 
-wire to_store_stage_2_comb = !p1_stage_1 && window_begin[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && !fade_counter[7];
+reg stall_out_r;
+always @(posedge clk) stall_out_r <= stall_out;
+wire to_store_stage_2_comb = !p1_stage_1 && window_begin[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && !fade_counter[7] && !stall_out_r;
 
 reg [10:0] eof_delay;
 initial eof_delay = 0;

@@ -13,15 +13,9 @@ export MC_XBAR = 1
 # Personality requires read ordering
 export MC_READ_ORDER = 1
 
-#NICE		?= nice -n0
-
-#XILINX_XST_OPTIONS += -equivalent_register_removal no
-
-XILINX_MAP_OPTIONS += -register_duplication on
-XILINX_THREADS += 4
+XILINX = /var/tmp/ktown/13./../../../../remote/Xilinx/14.7/ISE
 
 #XILINX = /var/tmp/../../$(XILINX)
-XILINX = /var/tmp/ktown/13./../../../../remote/Xilinx/14.7/ISE
 
 USER_VHDL_FILES += ../vhdl/OutputIEEE_11_52_to_11_52.vhdl ../vhdl/InputIEEE_11_52_to_11_52.vhdl ../vhdl/FPAdder_11_52_uid2.vhdl ../vhdl/FPMultiplier_11_52_11_52_11_52_uid2.vhdl
 # Personality supports asynchronous core clock

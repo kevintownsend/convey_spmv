@@ -57,6 +57,14 @@ reg [63:0] op_r;
 reg busy_r;
 reg mac_input_stage_1;
 reg mac_mem_req_stage_1;
+reg [5:0] steady_timeout;
+wire mem_req_fifo_empty;
+always @(posedge clk) begin
+    if(!registers_equal || !mem_req_fifo_empty)
+        steady_timeout <= 0;
+    else
+        steady_timeout <= steady_timeout + 1;
+end
 always @* begin
     next_rst = 0;
     next_state = state;
@@ -71,7 +79,7 @@ always @* begin
     case(state)
         STEADY: begin
             busy_status = 1;
-            if(registers_equal)
+            if(steady_timeout[5])
                 next_state = IDLE;
         end
     endcase
@@ -135,11 +143,14 @@ assign busy_out = busy_r;
     always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
     sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    reg rsp_mem_push_stage_1;
     always @(posedge clk) begin
-        decoder_rsp_mem_push <= rsp_mem_push && !rsp_mem_tag[0];
+        rsp_mem_push_stage_1 <= rsp_mem_push;
         rsp_mem_tag_stage_1 <= rsp_mem_tag;
         rsp_mem_q_stage_1 <= rsp_mem_q;
     end
+    always @*
+        decoder_rsp_mem_push = rsp_mem_push_stage_1 && !rsp_mem_tag_stage_1[0];
     //std_fifo
     reg decoder_mem_req_fifo_pop;
     wire [48 + 2 - 1:0] decoder_mem_req_fifo_q;
@@ -154,9 +165,8 @@ assign busy_out = busy_r;
     wire [63:0] cache_x_val;
     x_vector_cache #(SUB_WIDTH) cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val);
 
-    always @(posedge clk) begin
-        cache_rsp_mem_push <= rsp_mem_push && rsp_mem_tag[0];
-    end
+    always @*
+        cache_rsp_mem_push <= rsp_mem_push_stage_1 && rsp_mem_tag_stage_1[0];
 
     reg cache_mem_req_fifo_pop;
     wire [47:0] cache_mem_req_fifo_q;
@@ -196,7 +206,8 @@ assign busy_out = busy_r;
     wire mac_push_out;
     wire [63:0] mac_v_out;
     reg mac_eof;
-    mac #(1024) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof, mac_stall);
+    wire mac_mem_req_fifo_almost_full;
+    mac #(1024) mac_inst(clk, rst, mac_input_stage_1, row_fifo_q, val_fifo_q, x_val_fifo_q, mac_push_out, mac_v_out, mac_eof, mac_stall, mac_mem_req_fifo_almost_full);
     always @(posedge clk) begin
         if(mac_input_stage_1)
             $display("mac push in: row: %d v0: %f v1: %f", row_fifo_q, $bitstoreal(val_fifo_q), $bitstoreal(x_val_fifo_q));
@@ -219,13 +230,13 @@ assign busy_out = busy_r;
     wire mac_mem_req_fifo_empty;
 
     //std_fifo #(64, 32) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
-    std_fifo #(64, 512) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , );
-
+    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) mac_mem_req_fifo(rst, clk, mac_push_out, mac_mem_req_fifo_pop, mac_v_out, mac_mem_req_fifo_q, mac_mem_req_fifo_full, mac_mem_req_fifo_empty, , , mac_mem_req_fifo_almost_full);
+    wire mem_req_fifo_almost_full;
     always @* begin
         mac_mem_req_fifo_pop = 0;
         cache_mem_req_fifo_pop = 0;
         decoder_mem_req_fifo_pop = 0;
-        if(req_mem_stall) begin
+        if(mem_req_fifo_almost_full) begin
         end else if(!mac_mem_req_fifo_empty) begin
             mac_mem_req_fifo_pop = 1;
         end else if(!cache_mem_req_fifo_empty) begin
@@ -268,30 +279,53 @@ assign busy_out = busy_r;
         end
     end
     */
+
+    //TODO: memory request fifo
+    reg mem_req_fifo_d_st, mem_req_fifo_d_ld;
+    reg [63:0] mem_req_fifo_d_d_or_tag;
+    reg [47:0] mem_req_fifo_d_addr;
+    reg mem_req_fifo_pop;
+    wire [64 + 48 + 2 - 1:0] mem_req_fifo_q;
+    wire mem_req_fifo_full;
+    std_fifo #(.WIDTH(64 + 48 + 2), .DEPTH(32), .ALMOST_FULL_COUNT(4), .LATENCY(0)) mem_req_fifo(rst, clk, mem_req_fifo_d_st || mem_req_fifo_d_ld, mem_req_fifo_pop, {mem_req_fifo_d_d_or_tag, mem_req_fifo_d_addr, mem_req_fifo_d_st, mem_req_fifo_d_ld}, mem_req_fifo_q, mem_req_fifo_full, mem_req_fifo_empty, , , mem_req_fifo_almost_full);
+    reg req_mem_stall_r;
+    always @(posedge clk) req_mem_stall_r <= req_mem_stall;
+    always @* mem_req_fifo_pop = !mem_req_fifo_empty && !req_mem_stall_r;
+
+
     always @(posedge clk) begin
-        req_mem_ld <= 0;
-        req_mem_st <= 0;
-        req_mem_addr <= registers[0];
-        req_mem_d_or_tag <= mac_mem_req_fifo_q;
+        mem_req_fifo_d_ld <= 0;
+        mem_req_fifo_d_st <= 0;
+        mem_req_fifo_d_addr <= registers[0];
+        mem_req_fifo_d_d_or_tag <= mac_mem_req_fifo_q;
         if(mac_mem_req_stage_1) begin
-            req_mem_st <= !registers_equal;
-            req_mem_addr <= registers[0];
-            req_mem_d_or_tag <= mac_mem_req_fifo_q;
+            mem_req_fifo_d_st <= !registers_equal;
+            mem_req_fifo_d_addr <= registers[0];
+            mem_req_fifo_d_d_or_tag <= mac_mem_req_fifo_q;
         end else if(cache_mem_req_stage_1) begin
-            req_mem_ld <= 1;
-            req_mem_addr <= cache_mem_req_fifo_q;
-            req_mem_d_or_tag[0] <= 1;
+            mem_req_fifo_d_ld <= 1;
+            mem_req_fifo_d_addr <= cache_mem_req_fifo_q;
+            mem_req_fifo_d_d_or_tag[0] <= 1;
         end else if(decoder_mem_req_stage_1) begin
-            req_mem_ld <= 1;
-            req_mem_addr <= decoder_mem_req_fifo_q[49:2];
-            req_mem_d_or_tag[0] <= 0;
-            req_mem_d_or_tag[2:1] <= decoder_mem_req_fifo_q[1:0];
+            mem_req_fifo_d_ld <= 1;
+            mem_req_fifo_d_addr <= decoder_mem_req_fifo_q[49:2];
+            mem_req_fifo_d_d_or_tag[0] <= 0;
+            mem_req_fifo_d_d_or_tag[2:1] <= decoder_mem_req_fifo_q[1:0];
         end
-        if(rst || !busy_r) begin
+    end
+
+    always @(posedge clk) begin
+        req_mem_ld <= mem_req_fifo_q[0];
+        req_mem_st <= mem_req_fifo_q[1];
+        req_mem_addr <= mem_req_fifo_q[48 + 2 - 1 -: 48];
+        req_mem_d_or_tag <= mem_req_fifo_q[64 + 48 + 2 - 1 -: 64];
+        //if(rst || !busy_r || !mem_req_fifo_pop) begin
+        if(!mem_req_fifo_pop) begin
             req_mem_ld <= 0;
             req_mem_st <= 0;
         end
     end
+
     always @(posedge clk) rsp_mem_stall <= decoder_rsp_mem_stall;// || x_val_fifo_almost_full;
     // synthesis translate_off
 /*
