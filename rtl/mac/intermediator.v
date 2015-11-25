@@ -45,7 +45,7 @@ reg [65:0] v1_stage_1;
 reg row_cmp_stage_1;
 
 reg multiplier_overflow_fifo_pop_delay;
-wire [64 + LOG2_INTERMEDIATOR_DEPTH - 1:0] multiplier_overflow_fifo_q;
+wire [66 + LOG2_INTERMEDIATOR_DEPTH - 1:0] multiplier_overflow_fifo_q;
 always @(posedge clk) begin
     p0_stage_1 <= p0_stage_0;
     r0_stage_1 <= r0_stage_0;
@@ -62,7 +62,7 @@ always @(posedge clk) begin
     if(multiplier_overflow_fifo_pop_delay) begin
         p0_stage_1 <= 1;
         r0_stage_1 <= multiplier_overflow_fifo_q[LOG2_INTERMEDIATOR_DEPTH - 1:0];
-        v0_stage_1 <= multiplier_overflow_fifo_q[64 + LOG2_INTERMEDIATOR_DEPTH - 1 -:64];
+        v0_stage_1 <= multiplier_overflow_fifo_q[66 + LOG2_INTERMEDIATOR_DEPTH - 1 -:66];
     end
 end
 
@@ -105,7 +105,7 @@ always @* multiplier_overflow_fifo_push = p0_stage_1 && ((!window_closed && r0_s
 reg multiplier_overflow_fifo_pop;
 always @* multiplier_overflow_fifo_pop = !multiplier_overflow_fifo_empty && window_closed && !wr0;
 always @(posedge clk) multiplier_overflow_fifo_pop_delay <= multiplier_overflow_fifo_pop;
-std_fifo #(64 + LOG2_INTERMEDIATOR_DEPTH, 32) multiplier_overflow_fifo(rst, clk, multiplier_overflow_fifo_push, multiplier_overflow_fifo_pop, {v0_stage_1, r0_stage_1}, multiplier_overflow_fifo_q, , multiplier_overflow_fifo_empty, , , );
+std_fifo #(66 + LOG2_INTERMEDIATOR_DEPTH, 32) multiplier_overflow_fifo(rst, clk, multiplier_overflow_fifo_push, multiplier_overflow_fifo_pop, {v0_stage_1, r0_stage_1}, multiplier_overflow_fifo_q, , multiplier_overflow_fifo_empty, , , );
 assign stall = !multiplier_overflow_fifo_empty;
 //TODO: complete
 

@@ -136,32 +136,6 @@ assign busy_out = busy_r;
 
     sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     always @(posedge clk) begin
-        if(decoder_push_index)
-            $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
-        if(decoder_push_val)
-            $display("decoder_push_val: %f", $bitstoreal(decoder_val));
-        $display("@verilog: %m debug:");
-        $display("@verilog: state: %d stall: %d", state, busy_status);
-        /*
-        $display("registers[6]: %d", decoder.registers[6]);
-        $display("registers[10]: %d", decoder.registers[10]);
-        $display("registers[7]: %d", decoder.registers[7]);
-        $display("registers[11]: %d", decoder.registers[11]);
-        */
-        //$display("stall: %d", decoder_stall_val);
-        /*
-        if(op_r[OPCODE_ARG_PE - 1:0] != OP_NOP)
-            $display("%d:opcode: %d, %d, %d", $time, op_r[OPCODE_ARG_PE - 1:0], op_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE], op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1], op_r[31:OPCODE_ARG_2]);
-        //$display("wtf: %d", decoder_req_mem_ld);
-        //$display("wtf: %d", decoder_busy);
-        if(decoder_rsp_mem_push) begin
-            $display("memory response");
-        end
-        */
-
-    end
-
-    always @(posedge clk) begin
         decoder_rsp_mem_push <= rsp_mem_push && !rsp_mem_tag[0];
         rsp_mem_tag_stage_1 <= rsp_mem_tag;
         rsp_mem_q_stage_1 <= rsp_mem_q;
@@ -328,6 +302,32 @@ assign busy_out = busy_r;
         $display("@verilog: reset %d", rst);
     end
     */
+    always @(posedge clk) begin
+        if(decoder_push_index)
+            $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
+        if(decoder_push_val)
+            $display("decoder_push_val: %f", $bitstoreal(decoder_val));
+        //$display("@verilog: %m debug:");
+        //$display("@verilog: state: %d stall: %d", state, busy_status);
+        /*
+        $display("registers[6]: %d", decoder.registers[6]);
+        $display("registers[10]: %d", decoder.registers[10]);
+        $display("registers[7]: %d", decoder.registers[7]);
+        $display("registers[11]: %d", decoder.registers[11]);
+        */
+        //$display("stall: %d", decoder_stall_val);
+        /*
+        if(op_r[OPCODE_ARG_PE - 1:0] != OP_NOP)
+            $display("%d:opcode: %d, %d, %d", $time, op_r[OPCODE_ARG_PE - 1:0], op_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE], op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1], op_r[31:OPCODE_ARG_2]);
+        //$display("wtf: %d", decoder_req_mem_ld);
+        //$display("wtf: %d", decoder_busy);
+        if(decoder_rsp_mem_push) begin
+            $display("memory response");
+        end
+        */
+
+    end
+
     // synthesis translate_on
 
     `include "common.vh"

@@ -71,7 +71,8 @@ struct SmacHeader{
 };
 */
     //initial $readmemh("cant0.hex", mock_main_memory);
-    initial $readmemh("example.hex", mock_main_memory);
+    //initial $readmemh("example.hex", mock_main_memory);
+    initial $readmemh("example2.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
     wire [63:0] height = mock_main_memory[2];
     wire [63:0] nnz = mock_main_memory[3];
@@ -91,10 +92,14 @@ struct SmacHeader{
     real tmp;
     initial #1 begin
         for(i = 0; i < width; i = i + 1) begin
-            tmp = i;
+            tmp = i + 1;
             mock_main_memory[x_vector_ptr / 8 + i] = $realtobits(tmp);
         end
     end
+    reg [63:0] gold_result [0:1000000];
+    //initial $readmemh("cant0Result.hex", gold_result);
+    //initial $readmemh("exampleResult.hex", gold_result);
+    initial $readmemh("example2Result.hex", gold_result);
 
     initial begin
         op_in[OPCODE_ARG_PE - 1:0] = OP_RST; //reset
@@ -284,7 +289,7 @@ struct SmacHeader{
     end
 
     //TODO: memory interface
-    localparam MEMORY_LATENCY = 8;
+    localparam MEMORY_LATENCY = 256;
     reg rsp_mem_push_latency [0:MEMORY_LATENCY];
     reg [2:0] rsp_mem_tag_latency [0:MEMORY_LATENCY];
     reg [63:0] rsp_mem_q_latency [0:MEMORY_LATENCY];
@@ -331,9 +336,12 @@ struct SmacHeader{
     end
 
     //TODO: check output
+    integer result_index;
+    initial result_index = 0;
     always @(posedge clk) begin
         if(req_mem_st) begin
-            $display("writing to memory: addr: %d val: %f", req_mem_addr, $bitstoreal(req_mem_d_or_tag));
+            $display("writing to memory: addr: %d val: %f gold: %f", req_mem_addr, $bitstoreal(req_mem_d_or_tag), $bitstoreal(gold_result[result_index]));
+            result_index = result_index + 1;
         end
     end
 

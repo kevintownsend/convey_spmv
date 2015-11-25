@@ -144,5 +144,12 @@ $(constants):
 $(simple_ram): rtl/inara-hdl-libraries/common/simple_ram.v
 	cp rtl/inara-hdl-libraries/common/simple_ram.v caeCnySpmv/verilog/.
 
+example_hex = rtl/decoders/example.hex
+
+$(example_hex) : src/smac/example.smac
+	src/binToHex src/smac/example.smac rtl/decoders/example.hex
+
+hex: $(example_hex)
+
 vim:
 	vim -p makefile rtl/linked_list_fifo/linked_list_fifo.v caeCnySpmv/sim/CaeIsaCnySpmv.cpp caeCnySpmv/appCnySpmv/CnySpmvApp.cpp caeCnySpmv/verilog/cae_pers.v rtl/std_fifo/std_fifo.v rtl/asymmetric_fifo/asymmetric_fifo.v rtl/ram/asymmetric_distributed_ram.v rtl/decoders/stream_decoder.v rtl/linked_list_fifo/linked_list_fifo.v rtl/pe/spmv_pe.v rtl/decoders/sparse_matrix_decoder.v
