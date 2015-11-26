@@ -306,9 +306,9 @@ void loadRegister(int ae, int pe, int registerAddress, int value){
 }
 void loadDeltas(int ae, int pe, ull deltas){
     loadRegister(ae, pe, 4, deltas);
-    loadRegister(ae, pe, 8, (ull)deltas + (ull)(8*pow((double)2, (double)7)));
+    loadRegister(ae, pe, 8, (ull)deltas + (ull)(8*pow((double)2, (double)9)));
     loadRegister(ae, pe, 5, 0);
-    loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)7)));
+    loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)9)));
     sendInstruction(ae, Instruction(Instruction::LD_DELTA_CODES, pe));
 }
 void loadFzipCodes(int ae, int pe, ull fzipCodes){
