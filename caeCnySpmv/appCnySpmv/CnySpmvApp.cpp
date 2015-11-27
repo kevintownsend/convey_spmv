@@ -147,22 +147,8 @@ int main(int argc, char *argv[])
         //TODO: run
         //reset(0,0);
     }
+    SmacHeader globalHeader = header;
 
-    cerr << "checking" << endl;
-    vector<double> goldY = check(argument + "After.mtx", xVector);
-    ull mismatches = 0;
-    for(ull i= 0; i < header.height; ++i){
-        if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
-            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
-            mismatches++;
-            /*
-            if(goldY[i] > -0.001 && yVector[i] > -0.001 && goldY[i] < 0.001 && yVector[i] < 0.001){}
-            else{
-            }
-            */
-        }
-    }
-    cerr << "total mismatches: " << mismatches << " percent: " << endl;
     free(buffer);
     cny_cp_free(cnyBuffer);
 
@@ -227,6 +213,22 @@ int main(int argc, char *argv[])
             cny_cp_free(cnyBufferVector[i]);
         }
     }
+
+    cerr << "checking" << endl;
+    vector<double> goldY = check(argument + "After.mtx", xVector);
+    ull mismatches = 0;
+    for(ull i= 0; i < globalHeader.height; ++i){
+        if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
+            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
+            mismatches++;
+            /*
+            if(goldY[i] > -0.001 && yVector[i] > -0.001 && goldY[i] < 0.001 && yVector[i] < 0.001){}
+            else{
+            }
+            */
+        }
+    }
+    cerr << "total mismatches: " << mismatches << " percent: " << endl;
 
     cny_cp_free(yVector);
     cny_cp_free(xVector);
