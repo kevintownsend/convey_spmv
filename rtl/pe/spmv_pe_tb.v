@@ -289,7 +289,7 @@ struct SmacHeader{
     end
 
     //TODO: memory interface
-    localparam MEMORY_LATENCY = 256;
+    localparam MEMORY_LATENCY = 2000;
     reg rsp_mem_push_latency [0:MEMORY_LATENCY];
     reg [2:0] rsp_mem_tag_latency [0:MEMORY_LATENCY];
     reg [63:0] rsp_mem_q_latency [0:MEMORY_LATENCY];
