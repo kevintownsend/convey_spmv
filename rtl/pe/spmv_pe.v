@@ -37,6 +37,7 @@ localparam IDLE = 0;
 localparam STEADY = 1;
 localparam REGISTER_START = 0;
 localparam REGISTER_END = 4;
+initial state = IDLE;
 reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
 //TODO: wire registers
 wire [47:0] register_0 = registers[0];
@@ -54,6 +55,7 @@ wire registers_equal = registers[0] == registers[1];
 reg busy_status;
 wire decoder_busy;
 reg [63:0] op_r;
+initial op_r = OP_RST;
 reg busy_r;
 reg mac_input_stage_1;
 reg mac_mem_req_stage_1;
