@@ -86,12 +86,13 @@ reg stall_out_r;
 always @(posedge clk) stall_out_r <= stall_out;
 wire to_store_stage_2_comb = !p1_stage_1 && window_begin[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && !fade_counter[7] && !stall_out_r;
 
+reg window_closed;
 reg [10:0] eof_delay;
 initial eof_delay = 0;
 always @(posedge clk) begin
     if(eof)
         eof_delay[9] <= 1;
-    if(eof_delay[9])
+    if(eof_delay[9] && window_closed)
         eof_delay <= eof_delay + 1;
     if(eof_delay[10])
         eof_delay[10] <= 0;
@@ -99,7 +100,6 @@ always @(posedge clk) begin
         eof_delay <= 0;
 end
 
-reg window_closed;
 always @(posedge clk) window_closed <= window_begin == window_end;
 reg multiplier_overflow_fifo_push;
 wire multiplier_overflow_fifo_empty;
@@ -129,6 +129,7 @@ always @(posedge clk) begin
     if(multiplier_overflow_fifo_push)
         p0_stage_2 <= 0;
     if(window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[10]) begin
+        // synthesis off
         $display("incrementing window at %d", $time);
         $display("p0: %d %d", p0_stage_1, r0_stage_1);
         $display("multiplier_overflow_fifo.count: %d", multiplier_overflow_fifo.count);
@@ -137,8 +138,10 @@ always @(posedge clk) begin
             $display("ERROR advancing too soon");
             $display("window_begin: %B", window_begin);
             $display("window_end: %B", window_end);
-            //$finish;
+            $display("eof: %d", eof_delay[10]);
+            $finish;
         end
+        // synthesis on
 
         fade_counter[7] <= 1;
         window_end[LOG2_INTERMEDIATOR_DEPTH - 1] <= !window_end[LOG2_INTERMEDIATOR_DEPTH - 1];
