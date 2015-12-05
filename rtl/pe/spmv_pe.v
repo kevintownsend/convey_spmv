@@ -54,9 +54,10 @@ end
 wire registers_equal = registers[0] == registers[1];
 reg busy_status;
 wire decoder_busy;
-reg [63:0] op_in_r, op_out_r;
+reg [63:0] op_in_r, op_out_r, op_r;
 initial op_in_r = OP_RST;
 initial op_out_r = OP_RST;
+initial op_r = OP_RST;
 reg busy_in_r, busy_out_r;
 reg mac_input_stage_1;
 reg mac_mem_req_stage_1;
@@ -93,8 +94,8 @@ always @* begin
     //    next_registers[3][47] = 0;
     if(mac_mem_req_stage_1 && !registers_equal)
         next_registers[0] = register_0 + 8;
-    if(op_in_r[OPCODE_ARG_1 - 1] || op_in_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
-        case(op_in_r[OPCODE_ARG_PE - 1:0])
+    if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
+        case(op_r[OPCODE_ARG_PE - 1:0])
             OP_RST: begin
                 next_rst = 1;
                 next_state = 0;
@@ -108,8 +109,8 @@ always @* begin
             end
             OP_LD: begin
                 for(i = REGISTER_START; i < REGISTER_END; i = i + 1) begin
-                    if(i == op_in_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
-                        next_registers[i] = op_in_r[63:OPCODE_ARG_2];
+                    if(i == op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
+                        next_registers[i] = op_r[63:OPCODE_ARG_2];
                 end
             end
         endcase
@@ -120,6 +121,7 @@ end
 always @(posedge clk) begin
     op_in_r <= op_in;
     op_out_r <= op_in_r;
+    op_r <= op_in_r;
     busy_in_r <= busy_in;
     busy_out_r <= busy_status || busy_in_r;
 
@@ -147,7 +149,7 @@ assign busy_out = busy_out_r;
     //TODO: finish
     always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
-    sparse_matrix_decoder #(ID, 4) decoder(clk, op_in_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     reg rsp_mem_push_stage_1;
     always @(posedge clk) begin
         rsp_mem_push_stage_1 <= rsp_mem_push;
