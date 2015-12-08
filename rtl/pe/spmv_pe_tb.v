@@ -287,11 +287,19 @@ struct SmacHeader{
             #10;
         end
         $display("Done");
+        $display("info:");
+        $display("clock_count: %d", dut.clock_count);
+        $display("decoder_stall_val_count: %d", dut.decoder_stall_val_count);
+        $display("decoder_stall_index_count: %d", dut.decoder_stall_index_count);
+        $display("half_full_count[0]: %d", dut.decoder.half_full_count[0]);
+        $display("half_full_count[1]: %d", dut.decoder.half_full_count[1]);
+        $display("half_full_count[2]: %d", dut.decoder.half_full_count[2]);
+        $display("half_full_count[3]: %d", dut.decoder.half_full_count[3]);
         $finish;
     end
 
     //TODO: memory interface
-    localparam MEMORY_LATENCY = 100;
+    localparam MEMORY_LATENCY = 1000;
     reg rsp_mem_push_latency [0:MEMORY_LATENCY];
     reg [2:0] rsp_mem_tag_latency [0:MEMORY_LATENCY];
     reg [63:0] rsp_mem_q_latency [0:MEMORY_LATENCY];

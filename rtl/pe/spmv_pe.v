@@ -162,7 +162,7 @@ assign busy_out = busy_out_r;
     reg decoder_mem_req_fifo_pop;
     wire [48 + 2 - 1:0] decoder_mem_req_fifo_q;
     wire decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty;
-    std_fifo #(.WIDTH(50), .DEPTH(32), .ALMOST_FULL_COUNT(2)) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_req_fifo_almost_full);
+    std_fifo #(.WIDTH(50), .DEPTH(32), .ALMOST_FULL_COUNT(3)) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_req_fifo_almost_full);
 
     //TODO: x vector cache
     wire cache_req_mem;
@@ -343,11 +343,24 @@ assign busy_out = busy_out_r;
         $display("@verilog: reset %d", rst);
     end
     */
+    integer clock_count;
+    integer decoder_stall_index_count;
+    integer decoder_stall_val_count;
+    initial begin
+        clock_count = 0;
+        decoder_stall_index_count = 0;
+        decoder_stall_val_count = 0;
+    end
     always @(posedge clk) begin
         if(decoder_push_index)
             $display("decoder_push_index: row: %d col: %d", decoder_row, decoder_col);
         if(decoder_push_val)
             $display("decoder_push_val: %f", $bitstoreal(decoder_val));
+        clock_count <= clock_count + 1;
+        if(decoder_stall_index)
+            decoder_stall_index_count <= decoder_stall_index_count + 1;
+        if(decoder_stall_val)
+            decoder_stall_val_count <= decoder_stall_val_count + 1;
         //$display("@verilog: %m debug:");
         //$display("@verilog: state: %d stall: %d", state, busy_status);
         /*
