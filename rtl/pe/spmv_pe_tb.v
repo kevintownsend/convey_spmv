@@ -35,13 +35,13 @@ end
 
     integer i;
 initial begin
-    #10000000 $display("watchdog timer reached");
+    #100000000 $display("watchdog timer reached");
     $display("registers:");
     for(i = 0; i < 4; i = i + 1) begin
         $display("%d: %d", i, dut.registers[i]);
     end
     for(i = 4; i < 14; i = i + 1) begin
-        $display("%d: %d", i, dut.registers[i]);
+        $display("%d: %d", i, dut.decoder.registers[i]);
     end
     $finish;
 end
@@ -70,7 +70,8 @@ struct SmacHeader{
     ull r2[8];
 };
 */
-    initial $readmemh("cant0.hex", mock_main_memory);
+    //initial $readmemh("cant0.hex", mock_main_memory);
+    initial $readmemh("consph0.hex", mock_main_memory);
     //initial $readmemh("example.hex", mock_main_memory);
     //initial $readmemh("example2.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
@@ -97,7 +98,8 @@ struct SmacHeader{
         end
     end
     reg [63:0] gold_result [0:1000000];
-    initial $readmemh("cant0Result.hex", gold_result);
+    //initial $readmemh("cant0Result.hex", gold_result);
+    initial $readmemh("consph0Result.hex", gold_result);
     //initial $readmemh("exampleResult.hex", gold_result);
     //initial $readmemh("example2Result.hex", gold_result);
 
@@ -289,7 +291,7 @@ struct SmacHeader{
     end
 
     //TODO: memory interface
-    localparam MEMORY_LATENCY = 200;
+    localparam MEMORY_LATENCY = 100;
     reg rsp_mem_push_latency [0:MEMORY_LATENCY];
     reg [2:0] rsp_mem_tag_latency [0:MEMORY_LATENCY];
     reg [63:0] rsp_mem_q_latency [0:MEMORY_LATENCY];

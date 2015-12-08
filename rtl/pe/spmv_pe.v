@@ -162,7 +162,7 @@ assign busy_out = busy_out_r;
     reg decoder_mem_req_fifo_pop;
     wire [48 + 2 - 1:0] decoder_mem_req_fifo_q;
     wire decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty;
-    std_fifo #(50, 32) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_req_fifo_almost_full);
+    std_fifo #(.WIDTH(50), .DEPTH(32), .ALMOST_FULL_COUNT(2)) decoder_mem_req_fifo(rst, clk, decoder_req_mem_ld, decoder_mem_req_fifo_pop, {decoder_req_mem_addr, decoder_req_mem_tag}, decoder_mem_req_fifo_q, decoder_mem_req_fifo_full, decoder_mem_req_fifo_empty, , , decoder_mem_req_fifo_almost_full);
 
     //TODO: x vector cache
     wire cache_req_mem;

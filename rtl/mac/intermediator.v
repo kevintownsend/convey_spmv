@@ -139,7 +139,7 @@ always @(posedge clk) begin
             $display("window_begin: %B", window_begin);
             $display("window_end: %B", window_end);
             $display("eof: %d", eof_delay[10]);
-            $finish;
+            //$finish;
         end
         // synthesis on
 
