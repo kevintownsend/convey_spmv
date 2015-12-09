@@ -1,1 +1,2 @@
-TODO: set nice level when synthesizing
+TODO: be able to read from registers
+TODO: create reset that can recover from errors
