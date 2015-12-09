@@ -14,7 +14,7 @@ output [65:0] v1_to_adder;
 output push_to_y;
 output [65:0] v_to_y;
 input eof;
-output stall;
+output reg stall;
 input stall_out;
 
 reg p0_stage_0;
@@ -109,7 +109,7 @@ reg multiplier_overflow_fifo_pop;
 always @* multiplier_overflow_fifo_pop = !multiplier_overflow_fifo_empty && window_closed && !wr0;
 always @(posedge clk) multiplier_overflow_fifo_pop_delay <= multiplier_overflow_fifo_pop;
 std_fifo #(66 + LOG2_INTERMEDIATOR_DEPTH, 32) multiplier_overflow_fifo(rst, clk, multiplier_overflow_fifo_push, multiplier_overflow_fifo_pop, {v0_stage_1, r0_stage_1}, multiplier_overflow_fifo_q, , multiplier_overflow_fifo_empty, , , );
-assign stall = !multiplier_overflow_fifo_empty || overflow_fifo_half_full;
+always @(posedge clk) stall <= !multiplier_overflow_fifo_empty || overflow_fifo_half_full;
 //TODO: complete
 
 always @(posedge clk) begin
