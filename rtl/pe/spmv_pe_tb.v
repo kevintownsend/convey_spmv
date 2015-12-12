@@ -286,6 +286,7 @@ struct SmacHeader{
         while(busy_out)begin
             #10;
         end
+        //TODO: read registers
         $display("Done");
         $display("info:");
         $display("clock_count: %d", dut.clock_count);

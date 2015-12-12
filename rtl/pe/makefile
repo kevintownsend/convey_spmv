@@ -116,7 +116,7 @@ example.hex: ../../src/example.hex
 sim: sim_spmv_pe
 
 vim :
-	vim -p makefile spmv_pe.v spmv_pe_tb.v ../decoders/sparse_matrix_decoder.v x_vector_cache.v x_vector_cache_tb.v ../mac/mac.v
+	vim -p makefile spmv_pe.v spmv_pe_tb.v ../decoders/sparse_matrix_decoder.v ../decoders/spmv_opcodes.vh x_vector_cache.v x_vector_cache_tb.v ../mac/mac.v
 
 clean:
 	rm -rf work transcript
