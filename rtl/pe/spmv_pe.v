@@ -69,6 +69,7 @@ always @(posedge clk) begin
     else
         steady_timeout <= steady_timeout + 1;
 end
+reg [63:0] next_op_out_r;
 always @* begin
     next_rst = 0;
     next_state = state;
@@ -80,6 +81,7 @@ always @* begin
     next_registers[2] = register_2;
     next_registers[3] = register_3;
     busy_status = decoder_busy;
+    next_op_out_r = op_in_r; // || decoder_op_out;
     case(state)
         STEADY: begin
             busy_status = 1;
@@ -113,6 +115,10 @@ always @* begin
                         next_registers[i] = op_r[63:OPCODE_ARG_2];
                 end
             end
+            OP_READ: begin
+                if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END)
+                    next_op_out_r = {registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]], 12'HFFF};
+            end
         endcase
     end
 end
@@ -120,7 +126,7 @@ end
 
 always @(posedge clk) begin
     op_in_r <= op_in;
-    op_out_r <= op_in_r;
+    op_out_r <= next_op_out_r;
     op_r <= op_in_r;
     busy_in_r <= busy_in;
     busy_out_r <= busy_status || busy_in_r;
