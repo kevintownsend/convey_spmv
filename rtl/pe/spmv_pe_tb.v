@@ -294,8 +294,10 @@ struct SmacHeader{
             op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = sequencial_i;
             op_in[63:OPCODE_ARG_2] = 0;
             #10 op_in[OPCODE_ARG_PE - 1:0] = OP_NOP;
-            while(op_out[11:0] != 12'HFFF)
+            while(op_out[OPCODE_ARG_PE - 1:0] != OP_RETURN) begin
+                $display("op_out: %d", op_out[OPCODE_ARG_PE - 1:0]);
                 #10;
+            end
             $display("read from reg %d: %d", sequencial_i, op_out[63:12]);
         end
         $display("Done");

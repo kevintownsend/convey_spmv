@@ -83,7 +83,7 @@ always @* begin
     next_registers[3] = register_3;
     busy_status = decoder_busy;
     next_op_out_r = op_in_r; // || decoder_op_out;
-    if(decoder_op_out[11:0] == 12'HFFF)
+    if(decoder_op_out[OPCODE_ARG_PE - 1:0] == OP_RETURN)
         next_op_out_r = decoder_op_out;
     case(state)
         STEADY: begin
@@ -119,8 +119,12 @@ always @* begin
                 end
             end
             OP_READ: begin
-                if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END)
-                    next_op_out_r = {registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]], 12'HFFF};
+                if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END) begin
+                    next_op_out_r[OPCODE_ARG_PE - 1:0] = OP_RETURN;
+                    next_op_out_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = ID;
+                    next_op_out_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1];
+                    next_op_out_r = registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]];
+                end
             end
         endcase
     end
