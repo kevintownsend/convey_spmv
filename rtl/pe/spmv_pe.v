@@ -70,6 +70,7 @@ always @(posedge clk) begin
         steady_timeout <= steady_timeout + 1;
 end
 reg [63:0] next_op_out_r;
+wire [63:0] decoder_op_out;
 always @* begin
     next_rst = 0;
     next_state = state;
@@ -82,6 +83,8 @@ always @* begin
     next_registers[3] = register_3;
     busy_status = decoder_busy;
     next_op_out_r = op_in_r; // || decoder_op_out;
+    if(decoder_op_out[11:0] == 12'HFFF)
+        next_op_out_r = decoder_op_out;
     case(state)
         STEADY: begin
             busy_status = 1;
@@ -155,7 +158,7 @@ assign busy_out = busy_out_r;
     //TODO: finish
     always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
-    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_op_out, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     reg rsp_mem_push_stage_1;
     always @(posedge clk) begin
         rsp_mem_push_stage_1 <= rsp_mem_push;

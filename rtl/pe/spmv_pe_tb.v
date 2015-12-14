@@ -102,6 +102,7 @@ struct SmacHeader{
     //initial $readmemh("consph0Result.hex", gold_result);
     initial $readmemh("exampleResult.hex", gold_result);
     //initial $readmemh("example2Result.hex", gold_result);
+    integer sequencial_i;
 
     initial begin
         op_in[OPCODE_ARG_PE - 1:0] = OP_RST; //reset
@@ -287,13 +288,16 @@ struct SmacHeader{
             #10;
         end
         //TODO: read registers
-        #10 op_in[OPCODE_ARG_PE - 1:0] = OP_READ;
-        op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
-        op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = 0;
-        op_in[63:OPCODE_ARG_2] = 0;
-        while(op_out[11:0] != 12'HFFF)
-            #10;
-        $display("read from reg 0: %d", op_out[63:12]);
+        for(sequencial_i = 0; sequencial_i < 14; sequencial_i = sequencial_i + 1) begin
+            #10 op_in[OPCODE_ARG_PE - 1:0] = OP_READ;
+            op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
+            op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = sequencial_i;
+            op_in[63:OPCODE_ARG_2] = 0;
+            #10 op_in[OPCODE_ARG_PE - 1:0] = OP_NOP;
+            while(op_out[11:0] != 12'HFFF)
+                #10;
+            $display("read from reg %d: %d", sequencial_i, op_out[63:12]);
+        end
         $display("Done");
         $display("info:");
         $display("clock_count: %d", dut.clock_count);
