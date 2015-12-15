@@ -119,11 +119,13 @@ always @* begin
                 end
             end
             OP_READ: begin
+                $display("at OP_READ");
                 if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END) begin
+                    $display("in range");
                     next_op_out_r[OPCODE_ARG_PE - 1:0] = OP_RETURN;
                     next_op_out_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = ID;
                     next_op_out_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1];
-                    next_op_out_r = registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]];
+                    next_op_out_r[63:OPCODE_ARG_2] = registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]];
                 end
             end
         endcase

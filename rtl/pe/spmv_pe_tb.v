@@ -103,6 +103,7 @@ struct SmacHeader{
     initial $readmemh("exampleResult.hex", gold_result);
     //initial $readmemh("example2Result.hex", gold_result);
     integer sequencial_i;
+    integer sequencial_j;
 
     initial begin
         op_in[OPCODE_ARG_PE - 1:0] = OP_RST; //reset
@@ -294,9 +295,11 @@ struct SmacHeader{
             op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = sequencial_i;
             op_in[63:OPCODE_ARG_2] = 0;
             #10 op_in[OPCODE_ARG_PE - 1:0] = OP_NOP;
-            while(op_out[OPCODE_ARG_PE - 1:0] != OP_RETURN) begin
+            sequencial_j = 0;
+            while(op_out[OPCODE_ARG_PE - 1:0] != OP_RETURN && sequencial_j < 10) begin
                 $display("op_out: %d", op_out[OPCODE_ARG_PE - 1:0]);
                 #10;
+                sequencial_j = sequencial_j + 1;
             end
             $display("read from reg %d: %d", sequencial_i, op_out[63:12]);
         end
