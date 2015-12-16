@@ -208,7 +208,8 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
 
     //output of aeg registers
     wire [63:0]  w_aeg[NA-1:0];
-
+    `include "spmv_opcodes.vh"
+    wire [63:0] return_op;
     genvar g;
     generate for (g=0; g<NA; g=g+1) begin : g0
       reg [63:0] c_aeg, r_aeg;
@@ -216,6 +217,11 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
       always @* begin
         case (g)
 //TODO: add cases for registers to be written to
+            0: begin
+                c_aeg = r_aeg;
+                if(return_op[OPCODE_ARG_PE - 1:0] == OP_RETURN)
+                    c_aeg = return_op;
+            end
             default: c_aeg = r_aeg;
         endcase
       end
@@ -538,6 +544,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
         req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
     end endgenerate
+    assign return_op = instruction_connections[PE_COUNT];
 
     generate for(g = PE_COUNT; g < 16; g = g + 1) begin: gen_mem_signals
         assign req_mem_ld[g] = 0;
@@ -556,11 +563,16 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     end endgenerate
 
     // synthesis translate_off
+    integer i;
     always @(posedge clk) begin
         $display("@verilog: cae_pers debug %d", $time);
-        $display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
-        $display("@verilog: request address: %H", mc0_req_vadr_e);
-        $display("@verilog: response: push %d, stall: %d", mc0_rsp_push_e, mc0_rsp_stall_e);
+        for(i = 0; i < PE_COUNT + 1; i = i + 1) begin
+            $display("@verilog: busy[%d]: %d", i, busy_connections[i]);
+        end
+
+        //$display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
+        //$display("@verilog: request address: %H", mc0_req_vadr_e);
+        //$display("@verilog: response: push %d, stall: %d", mc0_rsp_push_e, mc0_rsp_stall_e);
     end
     // synthesis translate_on
 

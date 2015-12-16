@@ -133,7 +133,7 @@ $(linked_fifo):
 $(reorder_queue): rtl/inara-hdl-libraries/reorder_queue/reorder_queue.v
 	cp rtl/inara-hdl-libraries/reorder_queue/reorder_queue.v caeCnySpmv/verilog/.
 
-$(spmv_opcodes):
+$(spmv_opcodes): rtl/decoders/spmv_opcodes.vh
 	cp rtl/decoders/spmv_opcodes.vh caeCnySpmv/verilog/.
 
 $(smac): rtl/decoders/smac.vh
