@@ -540,9 +540,14 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
 
     localparam PE_COUNT = 16;
     generate for(g = 0; g < PE_COUNT; g = g + 1) begin: gen_pe
-    spmv_pe #(g) g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
-        req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
-        req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
+        spmv_pe #(g) g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
+            req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
+            req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
+
+        always @(posedge clk) begin
+            $display("@verilog: decoder_busy[%d]: %d", g, g_pe.decoder_busy);
+        end
+
     end endgenerate
     assign return_op = instruction_connections[PE_COUNT];
 
@@ -568,6 +573,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         $display("@verilog: cae_pers debug %d", $time);
         for(i = 0; i < PE_COUNT + 1; i = i + 1) begin
             $display("@verilog: busy[%d]: %d", i, busy_connections[i]);
+            //$display("@verilog: decoder_busy[%d]", i, gen_pe[i].g_pe.decoder_busy);
         end
 
         //$display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
