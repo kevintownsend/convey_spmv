@@ -55,9 +55,15 @@ wire registers_equal = registers[0] == registers[1];
 reg busy_status;
 wire decoder_busy;
 reg [63:0] op_in_r, op_out_r, op_r;
-initial op_in_r = OP_RST;
-initial op_out_r = OP_RST;
-initial op_r = OP_RST;
+initial op_in_r[OPCODE_ARG_PE - 1:0] = OP_RST;
+initial op_in_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 16;
+initial op_in_r[63:OPCODE_ARG_1] = 0;
+initial op_out_r[OPCODE_ARG_PE - 1:0] = OP_RST;
+initial op_out_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 16;
+initial op_out_r[63:OPCODE_ARG_1] = 0;
+initial op_r[OPCODE_ARG_PE - 1:0] = OP_RST;
+initial op_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 16;
+initial op_r[63:OPCODE_ARG_1] = 0;
 reg busy_in_r, busy_out_r;
 reg mac_input_stage_1;
 reg mac_mem_req_stage_1;
@@ -131,7 +137,6 @@ always @* begin
         endcase
     end
 end
-
 
 always @(posedge clk) begin
     op_in_r <= op_in;
