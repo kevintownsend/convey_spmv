@@ -261,10 +261,10 @@ vector<double> check(string mtxFilename, double* xVector){
 struct Instruction{
     enum operation {
         NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY
-    }op: 3;
+    }op: 4;
     ull pe : 5;
     ull arg1 : 4;
-    ull arg2 : 52;
+    ull arg2 : 51;
     Instruction(){}
     Instruction(operation op, ull pe, ull arg1, ull arg2){
         this->op = op;
@@ -285,6 +285,7 @@ struct Instruction{
     */
 };
 void sendInstruction(int ae, Instruction i){
+    cerr << "sending instruction " << i.op << " to ae" << ae << endl;
     switch(ae){
         case 0:copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
           break;

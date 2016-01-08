@@ -399,6 +399,8 @@ assign busy_out = busy_out_r;
             $display("memory response");
         end
         */
+        if(req_mem_ld)
+            $display("@verilog: %m req_mem_ld addr: %d", req_mem_addr);
 
     end
 
