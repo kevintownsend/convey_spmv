@@ -544,9 +544,6 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
             req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
             req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
 
-        always @(posedge clk) begin
-            $display("@verilog: decoder_busy[%d]: %d", g, g_pe.decoder_busy);
-        end
 
     end endgenerate
     assign return_op = instruction_connections[PE_COUNT];
@@ -568,6 +565,9 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     end endgenerate
 
     // synthesis translate_off
+    always @(posedge clk) begin
+        $display("@verilog: decoder_busy[%d]: %d", g, g_pe.decoder_busy);
+    end
     integer i;
     always @(posedge clk) begin
         $display("@verilog: cae_pers debug %d", $time);
