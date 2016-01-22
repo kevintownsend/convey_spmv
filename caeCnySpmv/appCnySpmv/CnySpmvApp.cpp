@@ -11,16 +11,17 @@
 using namespace std;
 
 //typedef unsigned long long uint64;
+typedef unsigned long long ull;
+typedef long long ll;
 
 //TODO: replace with new assembly function
 extern "C" void cpTalk();
-extern "C" void cpInstructionAE0();
-extern "C" void cpInstructionAE1();
-extern "C" void cpInstructionAE2();
-extern "C" void cpInstructionAE3();
-extern "C" void cpInstructionAEall();
+extern "C" long cpInstructionAE0();
+extern "C" long cpInstructionAE1();
+extern "C" long cpInstructionAE2();
+extern "C" long cpInstructionAE3();
+extern "C" long cpInstructionAEall();
 
-typedef unsigned long long ull;
 
 struct SmacHeader{
     ull r0;
@@ -53,6 +54,7 @@ void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xP
 void steadyPart2(int ae, int pe);
 void reset(int ae, int pe);
 void resetAll();
+ull readRegister(int ae, int pe, int registerAddress);
 
 char charBuffer[100];
 
@@ -142,10 +144,12 @@ int main(int argc, char *argv[])
         steadyPart2(0, 0);
         returnTardis();
         cerr << "done second part of steady" << endl;
-        cerr << "y: " << endl;
-        //TODO: load registers
-        //TODO: run
-        //reset(0,0);
+        cerr << "registers: " << endl;
+        for(int i = 0; i < 14; i++){
+            cerr << "register" << i << ": " << readRegister(0, 0, i) << endl;
+        }
+        //cerr << "y: " << endl;
+
     }
     SmacHeader globalHeader = header;
 
@@ -208,6 +212,7 @@ int main(int argc, char *argv[])
         steadyPart2(4, 16);
         returnTardis();
         cerr << "done second part of steady" << endl;
+
         for(int i = 0; i < number; ++i){
             free(bufferVector[i]);
             cny_cp_free(cnyBufferVector[i]);
@@ -260,7 +265,7 @@ vector<double> check(string mtxFilename, double* xVector){
 
 struct Instruction{
     enum operation {
-        NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY
+        NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY, READ, RETURN
     }op: 4;
     ull pe : 5;
     ull arg1 : 4;
@@ -284,20 +289,21 @@ struct Instruction{
     }
     */
 };
-void sendInstruction(int ae, Instruction i){
+ull sendInstruction(int ae, Instruction i){
     cerr << "sending instruction " << i.op << " to ae" << ae << endl;
     switch(ae){
-        case 0:copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
+        case 0: return l_copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
           break;
-        case 1:copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
+        case 1: return l_copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
           break;
-        case 2:copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
+        case 2: return l_copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
           break;
-        case 3:copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
+        case 3: return l_copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
           break;
-        case 4:copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
+        case 4: return l_copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
           break;
-        default: break;
+        default: return 0;
+                 break;
     }
 }
 
@@ -374,4 +380,17 @@ void loadRegister(int ae, int pe, int registerAddress, ull value){
     tmp.arg2 = value;
 
     sendInstruction(ae, tmp);
+}
+
+ull readRegister(int ae, int pe, int registerAddress){
+    cerr << "reading register " << registerAddress << " on pe " << pe << " on ae " << ae << endl;
+    Instruction tmp;
+    tmp.op = Instruction::READ;
+    tmp.pe = pe;
+    tmp.arg1 = registerAddress;
+    tmp.arg2 = 0;
+    ull ret = sendInstruction(ae, tmp);
+    cerr << "reagister value: " << ret << endl;
+    //TODO: return return value
+    return ret;
 }
