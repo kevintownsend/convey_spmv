@@ -39,11 +39,10 @@ localparam REGISTER_START = 0;
 localparam REGISTER_END = 4;
 initial state = IDLE;
 reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
-//TODO: wire registers
-wire [47:0] register_0 = registers[0];
-wire [47:0] register_1 = registers[1];
-wire [47:0] register_2 = registers[2];
-wire [47:0] register_3 = registers[3];
+wire [47:0] register_0 = registers[0]; //y vector address
+wire [47:0] register_1 = registers[1]; //y vector address end
+wire [47:0] register_2 = registers[2]; //x vector address
+wire [47:0] register_3 = registers[3]; //nnz count down
 integer i;
 always @(posedge clk) begin
     rst <= next_rst;
