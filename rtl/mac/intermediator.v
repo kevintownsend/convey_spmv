@@ -158,7 +158,7 @@ end
 wire occupency0_stage_2_comb;
 wire occupency1_stage_2_comb;
 
-dual_port_xor_ram #(INTERMEDIATOR_DEPTH) occupency_ram(clk, rst, p0_stage_2, r0_stage_2, occupency0_stage_2_comb, p1_stage_2 || push_store_stage_2, r1_stage_2, occupency1_stage_2_comb);
+dual_port_xor_ram #(INTERMEDIATOR_DEPTH) occupency_ram(clk, rst, p0_stage_2, r0_stage_2, occupency0_stage_2_comb, p1_stage_2 || (push_store_stage_2 && r1_stage_2), r1_stage_2, occupency1_stage_2_comb);
 /*
 always @(posedge clk) begin
     $display();

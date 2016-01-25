@@ -22,7 +22,18 @@ extern "C" long cpInstructionAE2();
 extern "C" long cpInstructionAE3();
 extern "C" long cpInstructionAEall();
 
+const string registerNames[] = {"y vector address begin", "y vector address end", "x vector start", "mac nnz count down", "index opcodes steam", "index arguments stream", "fzip opocdes stream" , "fzip arguments stream", "index opcodes end address", "index arguments end address", "fzip opcodes end address", "fzip arguments end address", "index nnz count down", "fzip nnz count down"};
 
+    //0: index opcodes stream
+    //1: index argument stream
+    //2: fzip opcode stream
+    //3: fzip argument stream
+    //4: index opcodes end
+    //5: index argument end
+    //6: fzip opcode end
+    //7: fzip argument end
+    //8: index nnz count down
+    //9: fzip nnz count down
 struct SmacHeader{
     ull r0;
     ull width;
@@ -146,7 +157,7 @@ int main(int argc, char *argv[])
         cerr << "done second part of steady" << endl;
         cerr << "registers: " << endl;
         for(int i = 0; i < 14; i++){
-            cerr << "register" << i << ": " << readRegister(0, 0, i) << endl;
+            cerr << "register" << i << " (" << registerNames[i] << ": " << readRegister(0, 0, i) << endl;
         }
         //cerr << "y: " << endl;
 
