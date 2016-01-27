@@ -479,22 +479,24 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
             send_instruction <= 1;
         end
     end
-    reg [5:0] min_busy_counter;
+    localparam MIN_BUSY = 64;
+    localparam LOG2_MIN_BUSY = log2(MIN_BUSY - 1);
+    reg [LOG2_MIN_BUSY:0] min_busy_counter;
     always @(posedge clk_per) begin
         if(send_instruction)
-            min_busy_counter[5] <= 1;
-        if(min_busy_counter[5])
+            min_busy_counter[LOG2_MIN_BUSY] <= 1;
+        if(min_busy_counter[LOG2_MIN_BUSY])
             min_busy_counter <= min_busy_counter + 1;
         if(reset_per)
-            min_busy_counter <= 32;
+            min_busy_counter <= 64;
     end
     wire [0:16] busy_connections;
     assign busy_connections[0] = 0;
-    always @* core_busy = send_instruction || min_busy_counter[5] || busy_connections[16] || (inst_caep == 5'd1 && inst_val);
+    always @* core_busy = send_instruction || min_busy_counter[LOG2_MIN_BUSY] || busy_connections[16] || (inst_caep == 5'd1 && inst_val);
     always @(posedge clk) begin
         if(core_busy) begin
             $display("@verilog: core_busy");
-            $display("@verilog: send_instruction: %d, min_busy_counter[5]: %d, busy_connections[16]: %d", send_instruction, min_busy_counter[5], busy_connections[16]);
+            $display("@verilog: send_instruction: %d, min_busy_counter[LOG2_MIN_BUSY]: %d, busy_connections[16]: %d", send_instruction, min_busy_counter[LOG2_MIN_BUSY], busy_connections[16]);
         end
     end
     wire [63:0] instruction_connections [0:16];
@@ -510,7 +512,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         instruction <= 0;
         if(send_instruction)
             instruction <= w_aeg[0];
-        if(reset_per || (min_busy_counter[5] && instruction[2:0] == 1) ||  watch_dog_timer[24]) begin
+        if(reset_per || (min_busy_counter[LOG2_MIN_BUSY] && instruction[2:0] == 1) ||  watch_dog_timer[24]) begin
             instruction[2:0] <= 1;
             instruction[7:3] <= 16;
         end
@@ -593,4 +595,5 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
 
     // synopsys translate_on
 
+    `include "common.vh"
 endmodule // cae_pers

@@ -294,11 +294,12 @@ struct Instruction{
         this->arg1 = 0;
         this->arg2 = 0;
     }
-    /*
     Instruction(ull raw){
-        *this = *(*Instruction)&raw;
+        this->op = raw;
+        this->pe = raw >> 4;
+        this->arg1 = raw >> 9;
+        this->arg2 = raw >> 13;
     }
-    */
 };
 ull sendInstruction(int ae, Instruction i){
     cerr << "sending instruction " << i.op << " to ae" << ae << endl;
@@ -400,8 +401,8 @@ ull readRegister(int ae, int pe, int registerAddress){
     tmp.pe = pe;
     tmp.arg1 = registerAddress;
     tmp.arg2 = 0;
-    ull ret = sendInstruction(ae, tmp);
-    cerr << "reagister value: " << ret << endl;
+    Instruction ret = (Instruction)sendInstruction(ae, tmp);
+    cerr << "reagister value: " << ret.arg2 << endl;
     //TODO: return return value
-    return ret;
+    return ret.arg2;
 }
