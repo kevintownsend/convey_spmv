@@ -31,7 +31,11 @@ output rsp_scratch_stall;
 
 
 
-reg rst, next_rst;
+reg rst, pre_rst, next_pre_rst;
+initial begin
+    rst = 1;
+    pre_rst = 1;
+end
 reg state, next_state;
 localparam IDLE = 0;
 localparam STEADY = 1;
@@ -45,7 +49,8 @@ wire [47:0] register_2 = registers[2]; //x vector address
 wire [47:0] register_3 = registers[3]; //nnz count down
 integer i;
 always @(posedge clk) begin
-    rst <= next_rst;
+    pre_rst <= next_pre_rst;
+    rst <= pre_rst;
     state <= next_state;
     for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
         registers[i] <= next_registers[i];
@@ -77,7 +82,7 @@ end
 reg [63:0] next_op_out_r;
 wire [63:0] decoder_op_out;
 always @* begin
-    next_rst = 0;
+    next_pre_rst = 0;
     next_state = state;
     busy_status = 0;
     //for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
@@ -107,7 +112,7 @@ always @* begin
     if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
         case(op_r[OPCODE_ARG_PE - 1:0])
             OP_RST: begin
-                next_rst = 1;
+                next_pre_rst = 1;
                 next_state = 0;
             end
             OP_STEADY: begin

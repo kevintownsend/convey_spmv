@@ -156,8 +156,11 @@ int main(int argc, char *argv[])
         returnTardis();
         cerr << "done second part of steady" << endl;
         cerr << "registers: " << endl;
-        for(int i = 0; i < 14; i++){
-            cerr << "register" << i << " (" << registerNames[i] << ": " << readRegister(0, 0, i) << endl;
+        for(int i = 0; i < 12; i++){
+            cerr << "register" << i << " (" << registerNames[i] << "): " << readRegister(0, 0, i) << endl;
+        }
+        for(int i = 12; i < 14; i++){
+            cerr << "register" << i << " (" << registerNames[i] << "): " << ((int)readRegister(0, 0, i)) << endl;
         }
         //cerr << "y: " << endl;
 

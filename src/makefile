@@ -1,4 +1,4 @@
-all: example.hex
+all: example.hex exampleResult.hex
 
 vim:
 	vim -p makefile binToHex.cpp
@@ -11,3 +11,9 @@ spmvResult: spmvResult.cpp
 
 example.hex: binToHex smac/example.smac
 	binToHex smac/example.smac example.hex
+
+exampleResult.bin: spmvResult
+	spmvResult smac/example.mtx exampleResult.bin
+
+exampleResult.hex: binToHex exampleResult.bin
+	binToHex exampleResult.bin exampleResult.hex
