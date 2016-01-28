@@ -1,3 +1,1 @@
-TODO: be able to read from registers. Give registers descriptive names.
 TODO: create reset that can recover from errors.
-TODO: mac handle short heights. e.g. write empty on flush.
