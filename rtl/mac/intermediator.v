@@ -193,7 +193,7 @@ end
 reg p0_store_to_intermediator_stage_4;
 reg p0_retrieve_from_intermediator_stage_4;
 reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r0_stage_4;
-reg [65:0] v0_stage_4;
+reg [65:0] v0_stage_4; //TODO: add stage between stage 4 and 5. sub stages?
 reg p1_store_to_intermediator_stage_4;
 reg p1_retrieve_from_intermediator_stage_4;
 reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r1_stage_4;
