@@ -89,3 +89,56 @@ xst: xst_mac
 
 xst_intermediator: intermediator.prj
 	echo "run -ifn intermediator.prj -ifmt mixed -top intermediator -ofn intermediator.ngc -ofmt NGC -p xc5vlx330-2 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+
+FPAdder_11_52_uid2.prj:
+	echo -e "vhdl work FPAdder_11_52_uid2.vhdl" > FPAdder_11_52_uid2.prj
+
+FPAdder_11_52_uid2_xst : FPAdder_11_52_uid2.prj
+	echo "run -ifn FPAdder_11_52_uid2.prj -ifmt mixed -top FPAdder_11_52_uid2 -ofn FPAdder_11_52_uid2.ngc -ofmt NGC -p xc5vlx330-2FF1760 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+FPAdder_11_52_uid2_post_par.par: FPAdder_11_52_uid2_xst
+	ngdbuild FPAdder_11_52_uid2
+	map FPAdder_11_52_uid2
+	par FPAdder_11_52_uid2 FPAdder_11_52_uid2_post_par
+
+adder_xst: FPAdder_11_52_uid2_post_par.par
+
+FPMultiplier_11_52_11_52_11_52_uid2.prj:
+	echo -e "vhdl work FPMultiplier_11_52_11_52_11_52_uid2.vhdl" > FPMultiplier_11_52_11_52_11_52_uid2.prj
+
+FPMultiplier_11_52_11_52_11_52_uid2_xst : FPMultiplier_11_52_11_52_11_52_uid2.prj
+	echo "run -ifn FPMultiplier_11_52_11_52_11_52_uid2.prj -ifmt mixed -top FPMultiplier_11_52_11_52_11_52_uid2 -ofn FPMultiplier_11_52_11_52_11_52_uid2.ngc -ofmt NGC -p xc5vlx330-2FF1760 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+FPMultiplier_11_52_11_52_11_52_uid2_post_par.par: FPMultiplier_11_52_11_52_11_52_uid2_xst
+	ngdbuild FPMultiplier_11_52_11_52_11_52_uid2
+	map FPMultiplier_11_52_11_52_11_52_uid2
+	par FPMultiplier_11_52_11_52_11_52_uid2 FPMultiplier_11_52_11_52_11_52_uid2_post_par
+
+multipier_xst: FPMultiplier_11_52_11_52_11_52_uid2_post_par.par
+
+InputIEEE_11_52_to_11_52.prj:
+	echo -e "vhdl work InputIEEE_11_52_to_11_52.vhdl" > InputIEEE_11_52_to_11_52.prj
+
+InputIEEE_11_52_to_11_52_xst : InputIEEE_11_52_to_11_52.prj
+	echo "run -ifn InputIEEE_11_52_to_11_52.prj -ifmt mixed -top InputIEEE_11_52_to_11_52 -ofn InputIEEE_11_52_to_11_52.ngc -ofmt NGC -p xc5vlx330-2FF1760 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+InputIEEE_11_52_to_11_52_post_par.par: InputIEEE_11_52_to_11_52_xst
+	ngdbuild InputIEEE_11_52_to_11_52
+	map InputIEEE_11_52_to_11_52
+	par InputIEEE_11_52_to_11_52 InputIEEE_11_52_to_11_52_post_par
+
+ieee_to_flopoco_xst: InputIEEE_11_52_to_11_52_post_par.par
+
+OutputIEEE_11_52_to_11_52.prj:
+	echo -e "vhdl work OutputIEEE_11_52_to_11_52.vhdl" > OutputIEEE_11_52_to_11_52.prj
+
+OutputIEEE_11_52_to_11_52_xst : OutputIEEE_11_52_to_11_52.prj
+	echo "run -ifn OutputIEEE_11_52_to_11_52.prj -ifmt mixed -top OutputIEEE_11_52_to_11_52 -ofn OutputIEEE_11_52_to_11_52.ngc -ofmt NGC -p xc5vlx330-2FF1760 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+OutputIEEE_11_52_to_11_52_post_par.par: OutputIEEE_11_52_to_11_52_xst
+	ngdbuild OutputIEEE_11_52_to_11_52
+	map OutputIEEE_11_52_to_11_52
+	par OutputIEEE_11_52_to_11_52 OutputIEEE_11_52_to_11_52_post_par
+
+flopoco_to_ieee_xst: OutputIEEE_11_52_to_11_52_post_par.par

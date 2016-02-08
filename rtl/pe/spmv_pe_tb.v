@@ -289,7 +289,7 @@ struct SmacHeader{
             #10;
         end
         //TODO: read registers
-        for(sequencial_i = 0; sequencial_i < 14; sequencial_i = sequencial_i + 1) begin
+        for(sequencial_i = 0; sequencial_i < 15; sequencial_i = sequencial_i + 1) begin
             #10 op_in[OPCODE_ARG_PE - 1:0] = OP_READ;
             op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
             op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = sequencial_i;
@@ -301,7 +301,7 @@ struct SmacHeader{
                 #10;
                 sequencial_j = sequencial_j + 1;
             end
-            $display("read from reg %d: %d", sequencial_i, op_out[63:12]);
+            $display("read from reg %d: %d", sequencial_i, op_out[63:OPCODE_ARG_2]);
         end
         $display("Done");
         $display("info:");
