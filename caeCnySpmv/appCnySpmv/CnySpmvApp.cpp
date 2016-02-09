@@ -66,6 +66,10 @@ void steadyPart2(int ae, int pe);
 void reset(int ae, int pe);
 void resetAll();
 ull readRegister(int ae, int pe, int registerAddress);
+vector<ull> printRegisters(int ae, int pe);
+vector<vector<ull> > printRegisters();
+vector<vector<ull> > printRegisters(int count);
+void discoverProblemPEs(vector<vector<ull> > PEs);
 
 char charBuffer[100];
 
@@ -233,6 +237,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    /*
     cerr << "checking" << endl;
     vector<double> goldY = check(argument + "After.mtx", xVector);
     ull mismatches = 0;
@@ -240,15 +245,15 @@ int main(int argc, char *argv[])
         if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
             cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
             mismatches++;
-            /*
-            if(goldY[i] > -0.001 && yVector[i] > -0.001 && goldY[i] < 0.001 && yVector[i] < 0.001){}
-            else{
-            }
-            */
         }
     }
     cerr << "total mismatches: " << mismatches << " percent: " << endl;
+    */
 
+    if(argc > 2){
+        vector<vector<ull> > registers = printRegisters(atoi(argv[2]));
+        discoverProblemPEs(registers);
+    }
     cny_cp_free(yVector);
     cny_cp_free(xVector);
     return 0;
@@ -305,7 +310,7 @@ struct Instruction{
     }
 };
 ull sendInstruction(int ae, Instruction i){
-    cerr << "sending instruction " << i.op << " to ae" << ae << endl;
+    //cerr << "sending instruction " << i.op << " to ae" << ae << endl;
     switch(ae){
         case 0: return l_copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
           break;
@@ -398,14 +403,50 @@ void loadRegister(int ae, int pe, int registerAddress, ull value){
 }
 
 ull readRegister(int ae, int pe, int registerAddress){
-    cerr << "reading register " << registerAddress << " on pe " << pe << " on ae " << ae << endl;
+    //cerr << "reading register " << registerAddress << " on pe " << pe << " on ae " << ae << endl;
     Instruction tmp;
     tmp.op = Instruction::READ;
     tmp.pe = pe;
     tmp.arg1 = registerAddress;
     tmp.arg2 = 0;
     Instruction ret = (Instruction)sendInstruction(ae, tmp);
-    cerr << "reagister value: " << ret.arg2 << endl;
+    //cerr << "reagister value: " << ret.arg2 << endl;
     //TODO: return return value
     return ret.arg2;
+}
+
+vector<ull> printRegisters(int ae, int pe){
+    vector<ull> registers;
+    for(int i = 0; i < 14; ++i)
+        registers.push_back(readRegister(ae, pe, i));
+    cerr << "printing the register values of pe" << pe << " on ae" << ae << ":\n";
+    for(int i = 0; i < 14; ++i)
+        cerr << i << " (" << registerNames[i] << "): " << registers[i] << endl;
+    return registers;
+}
+vector<vector<ull> > printRegisters(){
+    return printRegisters(64);
+}
+vector<vector<ull> > printRegisters(int count){
+    vector<vector<ull> > ret;
+    for(int i = 0; i < count; ++i){
+        ret.push_back(printRegisters(i / 16, i % 16));
+    }
+    return ret;
+}
+
+void discoverProblemPEs(vector<vector<ull> > PEs){
+    for(int i = 0; i < PEs.size(); ++i){
+        if(PEs[i][0] != PEs[i][1]){
+            cerr << "PE " << i << " is a problem\n";
+            for(int j = 0; j < 14; ++j)
+                cerr << j << " (" << registerNames[j] << "): " << PEs[i][j] << endl;
+            cerr << "dirived numbers: " << endl;
+            cerr << "y values not stored: " << ((PEs[i][1] - PEs[i][0]) / 8) << endl;
+            cerr << "index stream bytes: " << (PEs[i][8] - PEs[i][4]) << endl;
+            cerr << "index argument stream bytes: " << (PEs[i][9] - PEs[i][5]) << endl;
+            cerr << "fzip stream bytes: " << (PEs[i][10] - PEs[i][6]) << endl;
+            cerr << "fzip argument stream bytes: " << (PEs[i][11] - PEs[i][7]) << endl;
+        }
+    }
 }
