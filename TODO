@@ -1,2 +1,2 @@
-TODO: run cant0 matrix in pe testbench
-TODO: output descriptive information on cant parallel failure
+TODO: increased allowed in flight memory requests
+TODO: better load balancing
