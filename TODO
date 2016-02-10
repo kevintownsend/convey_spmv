@@ -1,8 +1,0 @@
-<<<<<<< HEAD
-TODO: set nice level when synthesizing
-TODO: mac to y fifo stall
-TODO: keep track of in flight requests
-=======
-TODO: increased allowed in flight memory requests
-TODO: better load balancing
->>>>>>> e9b7924599fc92111c11d3fc82388bfcbcd3cdaf
