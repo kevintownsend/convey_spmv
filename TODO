@@ -1,1 +1,3 @@
 TODO: set nice level when synthesizing
+TODO: mac to y fifo stall
+TODO: keep track of in flight requests
