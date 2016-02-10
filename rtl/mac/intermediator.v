@@ -14,7 +14,7 @@ output [65:0] v1_to_adder;
 output push_to_y;
 output [65:0] v_to_y;
 input eof;
-output stall;
+output reg stall;
 input stall_out;
 
 reg p0_stage_0;
@@ -86,12 +86,13 @@ reg stall_out_r;
 always @(posedge clk) stall_out_r <= stall_out;
 wire to_store_stage_2_comb = !p1_stage_1 && window_begin[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && !fade_counter[7] && !stall_out_r;
 
+reg window_closed;
 reg [10:0] eof_delay;
 initial eof_delay = 0;
 always @(posedge clk) begin
     if(eof)
         eof_delay[9] <= 1;
-    if(eof_delay[9])
+    if(eof_delay[9] && window_closed)
         eof_delay <= eof_delay + 1;
     if(eof_delay[10])
         eof_delay[10] <= 0;
@@ -99,7 +100,6 @@ always @(posedge clk) begin
         eof_delay <= 0;
 end
 
-reg window_closed;
 always @(posedge clk) window_closed <= window_begin == window_end;
 reg multiplier_overflow_fifo_push;
 wire multiplier_overflow_fifo_empty;
@@ -109,8 +109,7 @@ reg multiplier_overflow_fifo_pop;
 always @* multiplier_overflow_fifo_pop = !multiplier_overflow_fifo_empty && window_closed && !wr0;
 always @(posedge clk) multiplier_overflow_fifo_pop_delay <= multiplier_overflow_fifo_pop;
 std_fifo #(66 + LOG2_INTERMEDIATOR_DEPTH, 32) multiplier_overflow_fifo(rst, clk, multiplier_overflow_fifo_push, multiplier_overflow_fifo_pop, {v0_stage_1, r0_stage_1}, multiplier_overflow_fifo_q, , multiplier_overflow_fifo_empty, , , );
-assign stall = !multiplier_overflow_fifo_empty || overflow_fifo_half_full;
-//TODO: complete
+always @(posedge clk) stall <= !multiplier_overflow_fifo_empty || overflow_fifo_half_full;
 
 always @(posedge clk) begin
     p0_stage_2 <= p0_stage_1;
@@ -129,16 +128,18 @@ always @(posedge clk) begin
     if(multiplier_overflow_fifo_push)
         p0_stage_2 <= 0;
     if(window_closed && r0_stage_1[LOG2_INTERMEDIATOR_DEPTH - 1] != window_end[LOG2_INTERMEDIATOR_DEPTH - 1] && p0_stage_1 || eof_delay[10]) begin
+        // synthesis off
         $display("incrementing window at %d", $time);
         $display("p0: %d %d", p0_stage_1, r0_stage_1);
         $display("multiplier_overflow_fifo.count: %d", multiplier_overflow_fifo.count);
-        //TODO: raise error if window begin not equal window end
         if(window_begin != window_end) begin
             $display("ERROR advancing too soon");
             $display("window_begin: %B", window_begin);
             $display("window_end: %B", window_end);
+            $display("eof: %d", eof_delay[10]);
             //$finish;
         end
+        // synthesis on
 
         fade_counter[7] <= 1;
         window_end[LOG2_INTERMEDIATOR_DEPTH - 1] <= !window_end[LOG2_INTERMEDIATOR_DEPTH - 1];
@@ -155,7 +156,7 @@ end
 wire occupency0_stage_2_comb;
 wire occupency1_stage_2_comb;
 
-dual_port_xor_ram #(INTERMEDIATOR_DEPTH) occupency_ram(clk, rst, p0_stage_2, r0_stage_2, occupency0_stage_2_comb, p1_stage_2 || push_store_stage_2, r1_stage_2, occupency1_stage_2_comb);
+dual_port_xor_ram #(INTERMEDIATOR_DEPTH) occupency_ram(clk, rst, p0_stage_2, r0_stage_2, occupency0_stage_2_comb, p1_stage_2 || (push_store_stage_2 && r1_stage_2), r1_stage_2, occupency1_stage_2_comb);
 /*
 always @(posedge clk) begin
     $display();
@@ -192,7 +193,7 @@ end
 reg p0_store_to_intermediator_stage_4;
 reg p0_retrieve_from_intermediator_stage_4;
 reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r0_stage_4;
-reg [65:0] v0_stage_4;
+reg [65:0] v0_stage_4; //TODO: add stage between stage 4 and 5. sub stages?
 reg p1_store_to_intermediator_stage_4;
 reg p1_retrieve_from_intermediator_stage_4;
 reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r1_stage_4;

@@ -208,7 +208,8 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
 
     //output of aeg registers
     wire [63:0]  w_aeg[NA-1:0];
-
+    `include "spmv_opcodes.vh"
+    wire [63:0] return_op;
     genvar g;
     generate for (g=0; g<NA; g=g+1) begin : g0
       reg [63:0] c_aeg, r_aeg;
@@ -216,6 +217,11 @@ initial $display("starting cae personality aeid:%d\n", i_aeid);
       always @* begin
         case (g)
 //TODO: add cases for registers to be written to
+            0: begin
+                c_aeg = r_aeg;
+                if(return_op[OPCODE_ARG_PE - 1:0] == OP_RETURN)
+                    c_aeg = return_op;
+            end
             default: c_aeg = r_aeg;
         endcase
       end
@@ -473,22 +479,24 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
             send_instruction <= 1;
         end
     end
-    reg [5:0] min_busy_counter;
+    localparam MIN_BUSY = 64;
+    localparam LOG2_MIN_BUSY = log2(MIN_BUSY - 1);
+    reg [LOG2_MIN_BUSY:0] min_busy_counter;
     always @(posedge clk_per) begin
         if(send_instruction)
-            min_busy_counter[5] <= 1;
-        if(min_busy_counter[5])
+            min_busy_counter[LOG2_MIN_BUSY] <= 1;
+        if(min_busy_counter[LOG2_MIN_BUSY])
             min_busy_counter <= min_busy_counter + 1;
         if(reset_per)
-            min_busy_counter <= 32;
+            min_busy_counter <= 64;
     end
     wire [0:16] busy_connections;
     assign busy_connections[0] = 0;
-    always @* core_busy = send_instruction || min_busy_counter[5] || busy_connections[16] || (inst_caep == 5'd1 && inst_val);
+    always @* core_busy = send_instruction || min_busy_counter[LOG2_MIN_BUSY] || busy_connections[16] || (inst_caep == 5'd1 && inst_val);
     always @(posedge clk) begin
         if(core_busy) begin
             $display("@verilog: core_busy");
-            $display("@verilog: send_instruction: %d, min_busy_counter[5]: %d, busy_connections[16]: %d", send_instruction, min_busy_counter[5], busy_connections[16]);
+            $display("@verilog: send_instruction: %d, min_busy_counter[LOG2_MIN_BUSY]: %d, busy_connections[16]: %d", send_instruction, min_busy_counter[LOG2_MIN_BUSY], busy_connections[16]);
         end
     end
     wire [63:0] instruction_connections [0:16];
@@ -504,14 +512,13 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         instruction <= 0;
         if(send_instruction)
             instruction <= w_aeg[0];
-        if(reset_per || (min_busy_counter[5] && instruction[2:0] == 1) ||  watch_dog_timer[24]) begin
-            instruction[2:0] <= 1;
-            instruction[7:3] <= 16;
+        if(reset_per || (min_busy_counter[LOG2_MIN_BUSY] && instruction[OPCODE_ARG_PE:0] == 1) ||  watch_dog_timer[24]) begin
+            instruction[OPCODE_ARG_PE - 1:0] <= 1;
+            instruction[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] <= 16;
         end
     end
     assign instruction_connections[0] = instruction;
 
-    //TODO: scratch_pad
     localparam SCRATCH_PAD_PORTS = 16;
     wire [0:SCRATCH_PAD_PORTS - 1] req_scratch_ld;
     wire [0:SCRATCH_PAD_PORTS - 1] req_scratch_st;
@@ -533,11 +540,20 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
     localparam PE_COUNT = 16;
+    //TODO: add registers to instruction systolic array
     generate for(g = 0; g < PE_COUNT; g = g + 1) begin: gen_pe
-    spmv_pe #(g) g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
-        req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
-        req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
+        spmv_pe #(g) g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
+            req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
+            req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
+
+        // synthesis translate_off
+        always @(posedge clk) begin
+            $display("@verilog: decoder_busy[%d]: %d", g, g_pe.decoder_busy);
+        end
+        // synthesis translate_on
+
     end endgenerate
+    assign return_op = instruction_connections[PE_COUNT];
 
     generate for(g = PE_COUNT; g < 16; g = g + 1) begin: gen_mem_signals
         assign req_mem_ld[g] = 0;
@@ -556,11 +572,17 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     end endgenerate
 
     // synthesis translate_off
+    integer i;
     always @(posedge clk) begin
         $display("@verilog: cae_pers debug %d", $time);
-        $display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
-        $display("@verilog: request address: %H", mc0_req_vadr_e);
-        $display("@verilog: response: push %d, stall: %d", mc0_rsp_push_e, mc0_rsp_stall_e);
+        for(i = 0; i < PE_COUNT + 1; i = i + 1) begin
+            $display("@verilog: busy[%d]: %d", i, busy_connections[i]);
+            //$display("@verilog: decoder_busy[%d]", i, gen_pe[i].g_pe.decoder_busy);
+        end
+
+        //$display("@verilog: request: req_ld: %d req_st: %d req_stall_rd: %d, req_stall_wr: %d", mc0_req_ld_e, mc0_req_st_e, mc0_rd_rq_stall_e, mc0_wr_rq_stall_e);
+        //$display("@verilog: request address: %H", mc0_req_vadr_e);
+        //$display("@verilog: response: push %d, stall: %d", mc0_rsp_push_e, mc0_rsp_stall_e);
     end
     // synthesis translate_on
 
@@ -573,4 +595,5 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
 
     // synopsys translate_on
 
+    `include "common.vh"
 endmodule // cae_pers

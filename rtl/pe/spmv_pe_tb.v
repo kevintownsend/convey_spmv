@@ -35,13 +35,13 @@ end
 
     integer i;
 initial begin
-    #10000000 $display("watchdog timer reached");
+    #100000000 $display("watchdog timer reached");
     $display("registers:");
     for(i = 0; i < 4; i = i + 1) begin
         $display("%d: %d", i, dut.registers[i]);
     end
     for(i = 4; i < 14; i = i + 1) begin
-        $display("%d: %d", i, dut.registers[i]);
+        $display("%d: %d", i, dut.decoder.registers[i]);
     end
     $finish;
 end
@@ -70,8 +70,9 @@ struct SmacHeader{
     ull r2[8];
 };
 */
-    initial $readmemh("cant0.hex", mock_main_memory);
-    //initial $readmemh("example.hex", mock_main_memory);
+    //initial $readmemh("cant0.hex", mock_main_memory);
+    //initial $readmemh("consph0.hex", mock_main_memory);
+    initial $readmemh("example.hex", mock_main_memory);
     //initial $readmemh("example2.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
     wire [63:0] height = mock_main_memory[2];
@@ -97,9 +98,12 @@ struct SmacHeader{
         end
     end
     reg [63:0] gold_result [0:1000000];
-    initial $readmemh("cant0Result.hex", gold_result);
-    //initial $readmemh("exampleResult.hex", gold_result);
+    //initial $readmemh("cant0Result.hex", gold_result);
+    //initial $readmemh("consph0Result.hex", gold_result);
+    initial $readmemh("exampleResult.hex", gold_result);
     //initial $readmemh("example2Result.hex", gold_result);
+    integer sequencial_i;
+    integer sequencial_j;
 
     initial begin
         op_in[OPCODE_ARG_PE - 1:0] = OP_RST; //reset
@@ -284,12 +288,35 @@ struct SmacHeader{
         while(busy_out)begin
             #10;
         end
+        //TODO: read registers
+        for(sequencial_i = 0; sequencial_i < 15; sequencial_i = sequencial_i + 1) begin
+            #10 op_in[OPCODE_ARG_PE - 1:0] = OP_READ;
+            op_in[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 0;
+            op_in[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = sequencial_i;
+            op_in[63:OPCODE_ARG_2] = 0;
+            #10 op_in[OPCODE_ARG_PE - 1:0] = OP_NOP;
+            sequencial_j = 0;
+            while(op_out[OPCODE_ARG_PE - 1:0] != OP_RETURN && sequencial_j < 10) begin
+                $display("op_out: %d", op_out[OPCODE_ARG_PE - 1:0]);
+                #10;
+                sequencial_j = sequencial_j + 1;
+            end
+            $display("read from reg %d: %d", sequencial_i, op_out[63:OPCODE_ARG_2]);
+        end
         $display("Done");
+        $display("info:");
+        $display("clock_count: %d", dut.clock_count);
+        $display("decoder_stall_val_count: %d", dut.decoder_stall_val_count);
+        $display("decoder_stall_index_count: %d", dut.decoder_stall_index_count);
+        $display("half_full_count[0]: %d", dut.decoder.half_full_count[0]);
+        $display("half_full_count[1]: %d", dut.decoder.half_full_count[1]);
+        $display("half_full_count[2]: %d", dut.decoder.half_full_count[2]);
+        $display("half_full_count[3]: %d", dut.decoder.half_full_count[3]);
         $finish;
     end
 
     //TODO: memory interface
-    localparam MEMORY_LATENCY = 256;
+    localparam MEMORY_LATENCY = 1000;
     reg rsp_mem_push_latency [0:MEMORY_LATENCY];
     reg [2:0] rsp_mem_tag_latency [0:MEMORY_LATENCY];
     reg [63:0] rsp_mem_q_latency [0:MEMORY_LATENCY];

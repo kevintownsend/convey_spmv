@@ -11,17 +11,29 @@
 using namespace std;
 
 //typedef unsigned long long uint64;
+typedef unsigned long long ull;
+typedef long long ll;
 
 //TODO: replace with new assembly function
 extern "C" void cpTalk();
-extern "C" void cpInstructionAE0();
-extern "C" void cpInstructionAE1();
-extern "C" void cpInstructionAE2();
-extern "C" void cpInstructionAE3();
-extern "C" void cpInstructionAEall();
+extern "C" long cpInstructionAE0();
+extern "C" long cpInstructionAE1();
+extern "C" long cpInstructionAE2();
+extern "C" long cpInstructionAE3();
+extern "C" long cpInstructionAEall();
 
-typedef unsigned long long ull;
+const string registerNames[] = {"y vector address begin", "y vector address end", "x vector start", "mac nnz count down", "index opcodes steam", "index arguments stream", "fzip opocdes stream" , "fzip arguments stream", "index opcodes end address", "index arguments end address", "fzip opcodes end address", "fzip arguments end address", "index nnz count down", "fzip nnz count down"};
 
+    //0: index opcodes stream
+    //1: index argument stream
+    //2: fzip opcode stream
+    //3: fzip argument stream
+    //4: index opcodes end
+    //5: index argument end
+    //6: fzip opcode end
+    //7: fzip argument end
+    //8: index nnz count down
+    //9: fzip nnz count down
 struct SmacHeader{
     ull r0;
     ull width;
@@ -53,6 +65,11 @@ void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xP
 void steadyPart2(int ae, int pe);
 void reset(int ae, int pe);
 void resetAll();
+ull readRegister(int ae, int pe, int registerAddress);
+vector<ull> printRegisters(int ae, int pe);
+vector<vector<ull> > printRegisters();
+vector<vector<ull> > printRegisters(int count);
+void discoverProblemPEs(vector<vector<ull> > PEs);
 
 char charBuffer[100];
 
@@ -142,27 +159,18 @@ int main(int argc, char *argv[])
         steadyPart2(0, 0);
         returnTardis();
         cerr << "done second part of steady" << endl;
-        cerr << "y: " << endl;
-        //TODO: load registers
-        //TODO: run
-        //reset(0,0);
-    }
-
-    cerr << "checking" << endl;
-    vector<double> goldY = check(argument + "After.mtx", xVector);
-    ull mismatches = 0;
-    for(ull i= 0; i < header.height; ++i){
-        if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
-            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
-            mismatches++;
-            /*
-            if(goldY[i] > -0.001 && yVector[i] > -0.001 && goldY[i] < 0.001 && yVector[i] < 0.001){}
-            else{
-            }
-            */
+        cerr << "registers: " << endl;
+        for(int i = 0; i < 12; i++){
+            cerr << "register" << i << " (" << registerNames[i] << "): " << readRegister(0, 0, i) << endl;
         }
+        for(int i = 12; i < 14; i++){
+            cerr << "register" << i << " (" << registerNames[i] << "): " << ((int)readRegister(0, 0, i)) << endl;
+        }
+        //cerr << "y: " << endl;
+
     }
-    cerr << "total mismatches: " << mismatches << " percent: " << endl;
+    SmacHeader globalHeader = header;
+
     free(buffer);
     cny_cp_free(cnyBuffer);
 
@@ -222,12 +230,30 @@ int main(int argc, char *argv[])
         steadyPart2(4, 16);
         returnTardis();
         cerr << "done second part of steady" << endl;
+
         for(int i = 0; i < number; ++i){
             free(bufferVector[i]);
             cny_cp_free(cnyBufferVector[i]);
         }
     }
 
+    /*
+    cerr << "checking" << endl;
+    vector<double> goldY = check(argument + "After.mtx", xVector);
+    ull mismatches = 0;
+    for(ull i= 0; i < globalHeader.height; ++i){
+        if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
+            cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
+            mismatches++;
+        }
+    }
+    cerr << "total mismatches: " << mismatches << " percent: " << endl;
+    */
+
+    if(argc > 2){
+        vector<vector<ull> > registers = printRegisters(atoi(argv[2]));
+        discoverProblemPEs(registers);
+    }
     cny_cp_free(yVector);
     cny_cp_free(xVector);
     return 0;
@@ -258,11 +284,11 @@ vector<double> check(string mtxFilename, double* xVector){
 
 struct Instruction{
     enum operation {
-        NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY
-    }op: 3;
+        NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY, READ, RETURN
+    }op: 4;
     ull pe : 5;
     ull arg1 : 4;
-    ull arg2 : 52;
+    ull arg2 : 51;
     Instruction(){}
     Instruction(operation op, ull pe, ull arg1, ull arg2){
         this->op = op;
@@ -276,25 +302,28 @@ struct Instruction{
         this->arg1 = 0;
         this->arg2 = 0;
     }
-    /*
     Instruction(ull raw){
-        *this = *(*Instruction)&raw;
+        this->op = raw;
+        this->pe = raw >> 4;
+        this->arg1 = raw >> 9;
+        this->arg2 = raw >> 13;
     }
-    */
 };
-void sendInstruction(int ae, Instruction i){
+ull sendInstruction(int ae, Instruction i){
+    //cerr << "sending instruction " << i.op << " to ae" << ae << endl;
     switch(ae){
-        case 0:copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
+        case 0: return l_copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
           break;
-        case 1:copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
+        case 1: return l_copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
           break;
-        case 2:copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
+        case 2: return l_copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
           break;
-        case 3:copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
+        case 3: return l_copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
           break;
-        case 4:copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
+        case 4: return l_copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
           break;
-        default: break;
+        default: return 0;
+                 break;
     }
 }
 
@@ -306,9 +335,9 @@ void loadRegister(int ae, int pe, int registerAddress, int value){
 }
 void loadDeltas(int ae, int pe, ull deltas){
     loadRegister(ae, pe, 4, deltas);
-    loadRegister(ae, pe, 8, (ull)deltas + (ull)(8*pow((double)2, (double)7)));
+    loadRegister(ae, pe, 8, (ull)deltas + (ull)(8*pow((double)2, (double)9)));
     loadRegister(ae, pe, 5, 0);
-    loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)7)));
+    loadRegister(ae, pe, 9, (ull)(8*pow((double)2, (double)9)));
     sendInstruction(ae, Instruction(Instruction::LD_DELTA_CODES, pe));
 }
 void loadFzipCodes(int ae, int pe, ull fzipCodes){
@@ -371,4 +400,54 @@ void loadRegister(int ae, int pe, int registerAddress, ull value){
     tmp.arg2 = value;
 
     sendInstruction(ae, tmp);
+}
+
+ull readRegister(int ae, int pe, int registerAddress){
+    //cerr << "reading register " << registerAddress << " on pe " << pe << " on ae " << ae << endl;
+    Instruction tmp;
+    tmp.op = Instruction::READ;
+    tmp.pe = pe;
+    tmp.arg1 = registerAddress;
+    tmp.arg2 = 0;
+    Instruction ret = (Instruction)sendInstruction(ae, tmp);
+    //cerr << "reagister value: " << ret.arg2 << endl;
+    //TODO: return return value
+    return ret.arg2;
+}
+
+vector<ull> printRegisters(int ae, int pe){
+    vector<ull> registers;
+    for(int i = 0; i < 16; ++i)
+        registers.push_back(readRegister(ae, pe, i));
+    cerr << "printing the register values of pe" << pe << " on ae" << ae << ":\n";
+    for(int i = 0; i < 14; ++i)
+        cerr << i << " (" << registerNames[i] << "): " << registers[i] << endl;
+    return registers;
+}
+vector<vector<ull> > printRegisters(){
+    return printRegisters(64);
+}
+vector<vector<ull> > printRegisters(int count){
+    vector<vector<ull> > ret;
+    for(int i = 0; i < count; ++i){
+        ret.push_back(printRegisters(i / 16, i % 16));
+    }
+    return ret;
+}
+
+void discoverProblemPEs(vector<vector<ull> > PEs){
+    for(int i = 0; i < PEs.size(); ++i){
+        if(PEs[i][0] != PEs[i][1]){
+            cerr << "PE " << i << " is a problem\n";
+            for(int j = 0; j < 14; ++j)
+                cerr << j << " (" << registerNames[j] << "): " << PEs[i][j] << endl;
+            cerr << "dirived numbers: " << endl;
+            cerr << "y values not stored: " << ((PEs[i][1] - PEs[i][0]) / 8) << endl;
+            cerr << "index stream bytes: " << (PEs[i][8] - PEs[i][4]) << endl;
+            cerr << "index argument stream bytes: " << (PEs[i][9] - PEs[i][5]) << endl;
+            cerr << "fzip stream bytes: " << (PEs[i][10] - PEs[i][6]) << endl;
+            cerr << "fzip argument stream bytes: " << (PEs[i][11] - PEs[i][7]) << endl;
+            cerr << "debug flag register: " << PEs[i][14] << endl;
+        }
+    }
 }
