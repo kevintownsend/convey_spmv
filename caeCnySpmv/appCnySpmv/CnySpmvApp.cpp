@@ -417,7 +417,7 @@ ull readRegister(int ae, int pe, int registerAddress){
 
 vector<ull> printRegisters(int ae, int pe){
     vector<ull> registers;
-    for(int i = 0; i < 14; ++i)
+    for(int i = 0; i < 16; ++i)
         registers.push_back(readRegister(ae, pe, i));
     cerr << "printing the register values of pe" << pe << " on ae" << ae << ":\n";
     for(int i = 0; i < 14; ++i)
@@ -447,6 +447,7 @@ void discoverProblemPEs(vector<vector<ull> > PEs){
             cerr << "index argument stream bytes: " << (PEs[i][9] - PEs[i][5]) << endl;
             cerr << "fzip stream bytes: " << (PEs[i][10] - PEs[i][6]) << endl;
             cerr << "fzip argument stream bytes: " << (PEs[i][11] - PEs[i][7]) << endl;
+            cerr << "debug flag register: " << PEs[i][14] << endl;
         }
     }
 }
