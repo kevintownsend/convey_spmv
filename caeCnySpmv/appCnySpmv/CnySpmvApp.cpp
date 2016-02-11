@@ -224,12 +224,12 @@ int main(int argc, char *argv[])
             //cny_cp_free(cnyBuffer);
             yStart + header.height;
         }
-        cerr << "second part of steady" << endl;
         stealTardis();
+        cerr << "second part of steady" << endl;
         //steadyPart2(4, 16);
         steadyPart2(4, 16);
-        returnTardis();
         cerr << "done second part of steady" << endl;
+        returnTardis();
 
         for(int i = 0; i < number; ++i){
             free(bufferVector[i]);
