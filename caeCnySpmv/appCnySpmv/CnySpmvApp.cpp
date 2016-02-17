@@ -139,6 +139,8 @@ int main(int argc, char *argv[])
     for(ull i = 0; i < header.width; ++i)
         xVector[i] = 1.0;
     //loadRegister(0, 0, 0, (ull)yVector);
+    double processingTime = 0;
+    ull nnz = header.nnz;
     if(argc < 3){
         cerr << "loading deltas" << endl;
         loadDeltas(0, 0, (((ull)cnyBuffer)) + header.spmCodesPtr);
@@ -157,7 +159,7 @@ int main(int argc, char *argv[])
         cerr << "second part of steady" << endl;
         stealTardis();
         steadyPart2(0, 0);
-        returnTardis();
+        processingTime = returnTardis();
         cerr << "done second part of steady" << endl;
         cerr << "registers: " << endl;
         for(int i = 0; i < 12; i++){
@@ -229,7 +231,7 @@ int main(int argc, char *argv[])
         //steadyPart2(4, 16);
         steadyPart2(4, 16);
         cerr << "done second part of steady" << endl;
-        returnTardis();
+        processingTime = returnTardis();
 
         for(int i = 0; i < number; ++i){
             free(bufferVector[i]);
@@ -254,6 +256,12 @@ int main(int argc, char *argv[])
         vector<vector<ull> > registers = printRegisters(atoi(argv[2]));
         discoverProblemPEs(registers);
     }
+
+    double flops = nnz * 2.0 / processingTime;
+    double gflops = flops / 1000 / 1000 / 1000;
+    cerr << "performance GFlops: " << gflops << endl;
+    cerr << "nnz: " << nnz << endl;
+    cerr << "time: " << processingTime << endl;
     cny_cp_free(yVector);
     cny_cp_free(xVector);
     return 0;
