@@ -74,7 +74,7 @@ vim :
 	vim -p makefile mac.v mac_tb.v intermediator.v intermediator_tb.v ../ram/dual_port_xor_ram.v ../std_fifo/makefile
 
 clean:
-	rm -rf work transcript xst *.prj *.xprt *.ngc _xmsgs *.lso
+	rm -rf work transcript xst *.prj *.xprt *.ngc _xmsgs *.lso *.ncd
 
 intermediator.prj:
 	echo -e "verilog work intermediator.v\nverilog work ../std_fifo/std_fifo.v\nverilog work ../ram/dual_port_xor_ram.v\nverilog work ../ram/dual_port_block_ram.v" > intermediator.prj
@@ -83,9 +83,17 @@ mac.prj:
 	echo -e "verilog work intermediator.v\nverilog work ../std_fifo/std_fifo.v\nverilog work ../ram/dual_port_xor_ram.v\nverilog work ../ram/dual_port_block_ram.v\nvhdl work FPAdder_11_52_uid2.vhdl\nvhdl work FPMultiplier_11_52_11_52_11_52_uid2.vhdl\nvhdl work InputIEEE_11_52_to_11_52.vhdl\nvhdl work OutputIEEE_11_52_to_11_52.vhdl\nverilog work flopoco_to_ieee.v\nverilog work ieee_to_flopoco.v\nverilog work multiplier_pipe.v\nverilog work adder_pipe.v\nverilog work mac.v" > mac.prj
 
 xst_mac: mac.prj
-	echo "run -ifn mac.prj -ifmt mixed -top mac -ofn mac.ngc -ofmt NGC -p xc5vlx330-2 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+	echo "run -ifn mac.prj -ifmt mixed -top mac -ofn mac.ngc -ofmt NGC -p xc5vlx330-2FF1760 -vlgincdir ../common" | xst
+	#echo "run -ifn mac.prj -ifmt mixed -top mac -ofn mac.ngc -ofmt NGC -p xc5vlx330-2 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+mac_post_par.par: xst_mac
+	ngdbuild mac
+	map mac
+	par mac mac_post_par
 
 xst: xst_mac
+
+par_mac: mac_post_par.par
 
 xst_intermediator: intermediator.prj
 	echo "run -ifn intermediator.prj -ifmt mixed -top intermediator -ofn intermediator.ngc -ofmt NGC -p xc5vlx330-2 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst

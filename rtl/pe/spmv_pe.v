@@ -162,11 +162,13 @@ always @* begin
             end
         endcase
     end
-    next_debug_registers[DEBUG_REGISTERS_START] = 0;
-    next_debug_registers[DEBUG_REGISTERS_START][0] = mac_stall;
-    next_debug_registers[DEBUG_REGISTERS_START][1] = val_fifo_empty;
-    next_debug_registers[DEBUG_REGISTERS_START][2] = x_val_fifo_empty;
-    next_debug_registers[DEBUG_REGISTERS_START][3] = row_fifo_empty;
+    if(state == STEADY) begin
+        next_debug_registers[DEBUG_REGISTERS_START] = 0;
+        next_debug_registers[DEBUG_REGISTERS_START][0] = mac_stall;
+        next_debug_registers[DEBUG_REGISTERS_START][1] = val_fifo_empty;
+        next_debug_registers[DEBUG_REGISTERS_START][2] = x_val_fifo_empty;
+        next_debug_registers[DEBUG_REGISTERS_START][3] = row_fifo_empty;
+    end
 end
 
 always @(posedge clk) begin
