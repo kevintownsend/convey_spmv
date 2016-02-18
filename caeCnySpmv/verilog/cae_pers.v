@@ -512,7 +512,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         instruction <= 0;
         if(send_instruction)
             instruction <= w_aeg[0];
-        if(reset_per || (min_busy_counter[LOG2_MIN_BUSY] && instruction[OPCODE_ARG_PE:0] == 1) ||  watch_dog_timer[24]) begin
+        if(reset_per || (min_busy_counter[LOG2_MIN_BUSY] && instruction[OPCODE_ARG_PE:0] == 1) ||  watch_dog_timer[20]) begin
             instruction[OPCODE_ARG_PE - 1:0] <= 1;
             instruction[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] <= 16;
         end

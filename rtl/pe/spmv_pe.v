@@ -233,7 +233,7 @@ assign busy_out = busy_out_r;
     wire cache_mem_req_fifo_full;
     wire cache_mem_req_fifo_empty;
     wire cache_mem_req_fifo_almost_full;
-    std_fifo #(.WIDTH(48), .DEPTH(32), .ALMOST_FULL_COUNT(8)) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
+    std_fifo #(.WIDTH(48), .DEPTH(32), .ALMOST_FULL_COUNT(10)) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
 
     reg mac_input_stage_0;
     wire [63:0] val_fifo_q;

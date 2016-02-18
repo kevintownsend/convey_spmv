@@ -22,7 +22,7 @@ run
 -bus_delimiter []
 -case Maintain
 -slice_utilization_ratio 100
--bram_utilization_ratio 100
+-bram_utilization_ratio 70
 -dsp_utilization_ratio 100
 -lc OFF
 -reduce_control_sets OFF

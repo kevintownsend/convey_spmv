@@ -1,4 +1,5 @@
 module x_vector_cache(clk, rst, col, push_col, start_address, req_mem, req_mem_addr, rsp_mem_push, rsp_mem_q, push_x, x_val);
+//TODO: put x value fifo inside. x fifo small (32) and response fifo big (512) and is_cached_fifo (1024).
 parameter SUB_WIDTH = 8; //TODO: use includes
 parameter LOG2_SUB_WIDTH = log2(SUB_WIDTH - 1);
 input clk;
@@ -64,7 +65,7 @@ reg response_fifo_pop;
 wire [63:0] response_fifo_q;
 wire response_fifo_full;
 wire response_fifo_empty;
-std_fifo #(.WIDTH(64), .DEPTH(32), .LATENCY(1)) response_fifo(rst, clk, rsp_mem_push, response_fifo_pop, rsp_mem_q, response_fifo_q, response_fifo_full, response_fifo_empty, , , );
+std_fifo #(.WIDTH(64), .DEPTH(512), .LATENCY(1)) response_fifo(rst, clk, rsp_mem_push, response_fifo_pop, rsp_mem_q, response_fifo_q, response_fifo_full, response_fifo_empty, , , );
 
 //TODO: cache
 reg [63:0] cache [0:SUB_WIDTH - 1];
