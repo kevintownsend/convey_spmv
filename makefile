@@ -49,7 +49,7 @@ $(std_fifo): rtl/std_fifo/std_fifo.v
 $(spmv_pe): rtl/pe/spmv_pe.v
 	cp rtl/pe/spmv_pe.v caeCnySpmv/verilog/.
 
-$(x_vector_cache):
+$(x_vector_cache): rtl/pe/x_vector_cache.v
 	cp rtl/pe/x_vector_cache.v caeCnySpmv/verilog/.
 
 $(sparse_matrix_decoder): rtl/decoders/sparse_matrix_decoder.v
