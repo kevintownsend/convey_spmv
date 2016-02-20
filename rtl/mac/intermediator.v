@@ -17,12 +17,12 @@ input eof;
 output reg stall;
 input stall_out;
 
-reg p0_stage_0;
-reg [65:0] v0_stage_0;
-reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r0_stage_0;
-reg p1_stage_0;
-reg [65:0] v1_stage_0;
-reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r1_stage_0;
+(*KEEP = "true"*) reg p0_stage_0;
+(*KEEP = "true"*) reg [65:0] v0_stage_0;
+(*KEEP = "true"*) reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r0_stage_0;
+(*KEEP = "true"*) reg p1_stage_0;
+(*KEEP = "true"*) reg [65:0] v1_stage_0;
+(*KEEP = "true"*) reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] r1_stage_0;
 
 always @(posedge clk) begin
     p0_stage_0 <= wr0;
