@@ -37,7 +37,7 @@ run
 -auto_bram_packing NO
 -resource_sharing YES
 -async_to_sync NO
--shreg_min_size 3
+-shreg_min_size 8
 -use_dsp48 Auto
 -iobuf YES
 -max_fanout 100000
