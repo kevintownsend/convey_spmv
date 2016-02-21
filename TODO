@@ -1,2 +1,3 @@
+TODO: create debug registers to measure mac holdup.
 TODO: fix x_vector caching to be efficient
 TODO: benchmark all matricies
