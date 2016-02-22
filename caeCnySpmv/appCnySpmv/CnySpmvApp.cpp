@@ -168,6 +168,7 @@ int main(int argc, char *argv[])
         for(int i = 12; i < 14; i++){
             cerr << "register" << i << " (" << registerNames[i] << "): " << ((int)readRegister(0, 0, i)) << endl;
         }
+        cerr << "debug register: " << readRegister(0,0,14) << endl;
         //cerr << "y: " << endl;
 
     }

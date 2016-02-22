@@ -44,7 +44,7 @@ localparam REGISTER_END = 4;
 initial state = IDLE;
 reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
 localparam DEBUG_REGISTERS_START = 14;
-localparam DEBUG_REGISTERS_END = 16;
+localparam DEBUG_REGISTERS_END = 22;
 reg [47:0] debug_registers[DEBUG_REGISTERS_START:DEBUG_REGISTERS_END - 1], next_debug_registers[DEBUG_REGISTERS_START:DEBUG_REGISTERS_END - 1];
 wire [47:0] register_0 = registers[0]; //y vector address
 wire [47:0] register_1 = registers[1]; //y vector address end
@@ -52,6 +52,12 @@ wire [47:0] register_2 = registers[2]; //x vector address
 wire [47:0] register_3 = registers[3]; //nnz count down
 wire [47:0] debug_register_0 = debug_registers[DEBUG_REGISTERS_START];
 wire [47:0] debug_register_1 = debug_registers[DEBUG_REGISTERS_START + 1];
+wire [47:0] debug_register_2 = debug_registers[DEBUG_REGISTERS_START + 2];
+wire [47:0] debug_register_3 = debug_registers[DEBUG_REGISTERS_START + 3];
+wire [47:0] debug_register_4 = debug_registers[DEBUG_REGISTERS_START + 4];
+wire [47:0] debug_register_5 = debug_registers[DEBUG_REGISTERS_START + 5];
+wire [47:0] debug_register_6 = debug_registers[DEBUG_REGISTERS_START + 6];
+wire [47:0] debug_register_7 = debug_registers[DEBUG_REGISTERS_START + 7];
 integer i;
 always @(posedge clk) begin
     pre_rst <= next_pre_rst;
@@ -147,6 +153,10 @@ always @* begin
             end
             OP_READ: begin
                 $display("at OP_READ");
+                $display("DEBUG REGISTERS:");
+                for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1) begin
+                    $display("%d: %d", i, debug_registers[i]);
+                end
                 if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END) begin
                     $display("in range");
                     next_op_out_r[OPCODE_ARG_PE - 1:0] = OP_RETURN;
@@ -168,6 +178,22 @@ always @* begin
         next_debug_registers[DEBUG_REGISTERS_START][1] = val_fifo_empty;
         next_debug_registers[DEBUG_REGISTERS_START][2] = x_val_fifo_empty;
         next_debug_registers[DEBUG_REGISTERS_START][3] = row_fifo_empty;
+        //TODO: count times mac stalls
+        if(mac_stall)
+            next_debug_registers[DEBUG_REGISTERS_START + 1] = debug_register_1 + 1;
+        if(val_fifo_empty)
+            next_debug_registers[DEBUG_REGISTERS_START + 2] = debug_register_2 + 1;
+        if(x_val_fifo_empty)
+            next_debug_registers[DEBUG_REGISTERS_START + 3] = debug_register_3 + 1;
+        if(row_fifo_empty)
+            next_debug_registers[DEBUG_REGISTERS_START + 4] = debug_register_4 + 1;
+
+        next_debug_registers[DEBUG_REGISTERS_START + 5] = debug_register_5 + 1;
+    end
+    if(rst) begin
+        for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1) begin
+            next_debug_registers[i] = 0;
+        end
     end
 end
 
