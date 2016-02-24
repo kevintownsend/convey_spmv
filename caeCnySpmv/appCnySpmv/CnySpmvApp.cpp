@@ -296,8 +296,8 @@ struct Instruction{
         NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY, READ, RETURN
     }op: 4;
     ull pe : 5;
-    ull arg1 : 4;
-    ull arg2 : 51;
+    ull arg1 : 5;
+    ull arg2 : 48;
     Instruction(){}
     Instruction(operation op, ull pe, ull arg1, ull arg2){
         this->op = op;
