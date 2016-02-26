@@ -110,6 +110,12 @@ always @* begin
     next_registers[3] = register_3;
     next_debug_registers[DEBUG_REGISTERS_START] = debug_register_0;
     next_debug_registers[DEBUG_REGISTERS_START + 1] = debug_register_1;
+    next_debug_registers[DEBUG_REGISTERS_START + 2] = debug_register_2;
+    next_debug_registers[DEBUG_REGISTERS_START + 3] = debug_register_3;
+    next_debug_registers[DEBUG_REGISTERS_START + 4] = debug_register_4;
+    next_debug_registers[DEBUG_REGISTERS_START + 5] = debug_register_5;
+    next_debug_registers[DEBUG_REGISTERS_START + 6] = debug_register_6;
+    next_debug_registers[DEBUG_REGISTERS_START + 7] = debug_register_7;
     busy_status = decoder_busy;
     next_op_out_r = op_in_r; // || decoder_op_out;
     if(decoder_op_out[OPCODE_ARG_PE - 1:0] == OP_RETURN)
