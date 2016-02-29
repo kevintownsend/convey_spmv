@@ -1,7 +1,7 @@
 all: example.hex exampleResult.hex
 
 vim:
-	vim -p makefile decomposeMtx.cpp binToHex.cpp
+	vim -p makefile getBenchmarkResults.py decomposeMtx.cpp binToHex.cpp
 
 binToHex: binToHex.cpp
 	g++ -o binToHex binToHex.cpp
