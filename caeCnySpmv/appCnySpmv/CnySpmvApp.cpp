@@ -24,7 +24,8 @@ extern "C" long cpInstructionAEall();
 
 const string registerNames[] = {"y vector address begin", "y vector address end", "x vector start", "mac nnz count down", "index opcodes steam", "index arguments stream", "fzip opocdes stream" , "fzip arguments stream", "index opcodes end address", "index arguments end address", "fzip opcodes end address", "fzip arguments end address", "index nnz count down", "fzip nnz count down"};
 
-const string debugRegisterNames[] = {"flags", "MAC stalls", "matrix value hold up", "x values hold up", "row indices hold up", "RESERVED", "RESERVED", "RESERVED"};
+const string debugRegisterNames[] = {"flags", "MAC stalls", "matrix value hold up", "x values hold up", "row indices hold up", "RESERVED", "RESERVED", "RESERVED",
+"RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED"};
 
     //0: index opcodes stream
     //1: index argument stream
@@ -475,7 +476,7 @@ vector<vector<ull> > getDebugRegisters(int count){
     vector<vector<ull> > ret;
     for(int i = 0; i < count; ++i){
         vector<ull> debugRegisters;
-        for(int j = 14; j < 22; ++j)
+        for(int j = 14; j < 30; ++j)
             debugRegisters.push_back(readRegister(i / 16, i % 16, j));
         ret.push_back(debugRegisters);
     }
