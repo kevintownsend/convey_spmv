@@ -1,7 +1,7 @@
 all: example.hex exampleResult.hex
 
 vim:
-	vim -p makefile binToHex.cpp
+	vim -p makefile getBenchmarkResults.py decomposeMtx.cpp binToHex.cpp
 
 binToHex: binToHex.cpp
 	g++ -o binToHex binToHex.cpp
@@ -17,3 +17,9 @@ exampleResult.bin: spmvResult
 
 exampleResult.hex: binToHex exampleResult.bin
 	binToHex exampleResult.bin exampleResult.hex
+
+decomposeMtx: decomposeMtx.cpp
+	g++ -O3 -o decomposeMtx decomposeMtx.cpp
+
+run: decomposeMtx
+	decomposeMtx smac/example.mtx exampleVal.hex
