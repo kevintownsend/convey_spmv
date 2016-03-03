@@ -31,9 +31,11 @@ output rsp_scratch_stall;
 
 
 
-reg rst, pre_rst, next_pre_rst;
+reg rst, rst_1, pre_rst, next_pre_rst;
+
 initial begin
     rst = 1;
+    rst_1 = 1;
     pre_rst = 1;
 end
 reg state, next_state;
@@ -61,7 +63,8 @@ wire [47:0] debug_register_7 = debug_registers[DEBUG_REGISTERS_START + 7];
 integer i;
 always @(posedge clk) begin
     pre_rst <= next_pre_rst;
-    rst <= pre_rst;
+    rst_1 <= pre_rst;
+    rst <= rst_1;
     state <= next_state;
     for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
         registers[i] <= next_registers[i];

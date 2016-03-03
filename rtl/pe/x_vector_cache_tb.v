@@ -33,11 +33,11 @@ module x_vector_cache_tb;
         #100 rst = 0;
         #100 push_col = 1;
         #10 push_col = 0;
-#10 push_col = 1;
-col = 1;
-#10 push_col = 1;
-col = 0;
-#10 push_col = 0;
+        #10 push_col = 1;
+        col = 1;
+        #10 push_col = 1;
+        col = 0;
+        #10 push_col = 0;
 
     end
 

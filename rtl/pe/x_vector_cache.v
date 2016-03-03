@@ -1,4 +1,4 @@
-module x_vector_cache(clk, rst, col, push_col, start_address, req_mem, req_mem_addr, rsp_mem_push, rsp_mem_q, push_x, x_val);
+module x_vector_cache(clk, rst, col, push_col, start_address, req_mem, req_mem_addr, rsp_mem_push, rsp_mem_q, push_x, x_val, x_vector_request_increment, stall, almost_full);
 //TODO: put x value fifo inside. x fifo small (32) and response fifo big (512) and is_cached_fifo (1024).
 parameter SUB_WIDTH = 8; //TODO: use includes
 parameter LOG2_SUB_WIDTH = log2(SUB_WIDTH - 1);
@@ -13,6 +13,9 @@ input rsp_mem_push;
 input [63:0] rsp_mem_q;
 output push_x;
 output [63:0] x_val;
+input x_vector_request_increment;
+input stall;
+output almost_full;
 
 reg [0:SUB_WIDTH - 1] cache_prediction;
 reg [31 - LOG2_SUB_WIDTH:0] major_col;
@@ -53,11 +56,12 @@ assign req_mem = req_x_vector;
 assign req_mem_addr = x_vector_addr;
 //assign req_mem_tag = x_vector_tag;
 
-//TODO: is cached fifo
+//is cached fifo
 reg is_cached_fifo_pop;
 wire [LOG2_SUB_WIDTH:0] is_cached_fifo_q;
 wire is_cached_fifo_full;
 wire is_cached_fifo_empty;
+//TODO: change to 1024
 std_fifo #(.WIDTH(1 + LOG2_SUB_WIDTH), .DEPTH(512), .LATENCY(0)) is_cached_fifo(rst, clk, col_push_stage_2, is_cached_fifo_pop, {col_stage_2[LOG2_SUB_WIDTH - 1:0], is_cached_stage_2}, is_cached_fifo_q, is_cached_fifo_full, is_cached_fifo_empty, , , );
 
 //response fifo
@@ -67,7 +71,22 @@ wire response_fifo_full;
 wire response_fifo_empty;
 std_fifo #(.WIDTH(64), .DEPTH(512), .LATENCY(1)) response_fifo(rst, clk, rsp_mem_push, response_fifo_pop, rsp_mem_q, response_fifo_q, response_fifo_full, response_fifo_empty, , , );
 
-//TODO: cache
+//TODO: keep track of in flight requests
+localparam RESPONSE_FIFO_DEPTH=512;
+localparam LOG2_RESPONSE_FIFO_DEPTH=log2(RESPONSE_FIFO_DEPTH-1);
+reg [LOG2_RESPONSE_FIFO_DEPTH - 1:0] in_flight_counter;
+initial in_flight_counter = 0;
+always @(posedge clk) begin
+    if(response_fifo_pop && x_vector_request_increment) begin
+    end else if(response_fifo_pop) begin
+        in_flight_counter <= in_flight_counter - 1;
+    end else if(x_vector_request_increment) begin
+        in_flight_counter <= in_flight_counter + 1;
+    end
+end
+
+
+//cache
 reg [63:0] cache [0:SUB_WIDTH - 1];
 
 //TODO: memory response to out

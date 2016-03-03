@@ -24,8 +24,8 @@ extern "C" long cpInstructionAEall();
 
 const string registerNames[] = {"y vector address begin", "y vector address end", "x vector start", "mac nnz count down", "index opcodes steam", "index arguments stream", "fzip opocdes stream" , "fzip arguments stream", "index opcodes end address", "index arguments end address", "fzip opcodes end address", "fzip arguments end address", "index nnz count down", "fzip nnz count down"};
 
-const string debugRegisterNames[] = {"flags", "MAC stalls", "matrix value hold up", "x values hold up", "row indices hold up", "RESERVED", "RESERVED", "RESERVED",
-"RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED", "RESERVED"};
+const string debugRegisterNames[] = {"flags", "MAC stalls", "matrix value hold up", "x values hold up", "row indices hold up", "stead time", "RESERVED", "RESERVED",
+"RESERVED", "decoder steady time", "fifo 0 empty time", "fifo 1 empty time", "fifo 2 empty time", "fifo 3 empty time", "is common fifo almost full time", "is not common fifo almost full time"};
 
     //0: index opcodes stream
     //1: index argument stream

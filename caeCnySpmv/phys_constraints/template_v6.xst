@@ -22,9 +22,9 @@ run
 -bus_delimiter []
 -case Maintain
 -slice_utilization_ratio 100
--bram_utilization_ratio 60
+-bram_utilization_ratio 50
 -dsp_utilization_ratio 100
--lc OFF
+-lc AUTO
 -reduce_control_sets OFF
 -fsm_extract YES -fsm_encoding Auto
 -safe_implementation No
@@ -37,10 +37,10 @@ run
 -auto_bram_packing NO
 -resource_sharing YES
 -async_to_sync NO
--shreg_min_size 8
+-shreg_min_size 4
 -use_dsp48 Auto
 -iobuf YES
--max_fanout 100000
+-max_fanout 64
 -bufg 0
 -register_duplication YES
 -register_balancing YES
