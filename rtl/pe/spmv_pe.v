@@ -258,7 +258,9 @@ assign busy_out = busy_out_r;
     reg cache_rsp_mem_push;
     wire cache_push_x;
     wire [63:0] cache_x_val;
-    x_vector_cache #(SUB_WIDTH) cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val);
+    wire cache_almost_full;
+    wire x_val_fifo_almost_full;
+    x_vector_cache #(SUB_WIDTH) cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val, x_val_fifo_almost_full, cache_almost_full);
 
     always @*
         cache_rsp_mem_push <= rsp_mem_push_stage_1 && rsp_mem_tag_stage_1[0];
@@ -281,18 +283,18 @@ assign busy_out = busy_out_r;
     wire row_fifo_full;
     wire row_fifo_almost_full;
     std_fifo #(.WIDTH(32), .DEPTH(512), .ALMOST_FULL_COUNT(8)) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
-    reg cache_mem_req_fifo_almost_full_r, row_fifo_almost_full_r;
+    reg cache_mem_req_fifo_almost_full_r, row_fifo_almost_full_r, cache_almost_full_r;
     always @(posedge clk) begin
         //decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
         cache_mem_req_fifo_almost_full_r <= cache_mem_req_fifo_almost_full;
         row_fifo_almost_full_r <= row_fifo_almost_full;
-        decoder_stall_index <= cache_mem_req_fifo_almost_full_r || row_fifo_almost_full_r;
+        cache_almost_full_r <= cache_almost_full;
+        decoder_stall_index <= cache_mem_req_fifo_almost_full_r || row_fifo_almost_full_r || cache_almost_full_r;
     end
 
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
-    wire x_val_fifo_almost_full;
-    std_fifo #(.WIDTH(64), .DEPTH(512), .ALMOST_FULL_COUNT(10)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
+    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(10)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
 
     wire mac_push_out;
     wire [63:0] mac_v_out;
