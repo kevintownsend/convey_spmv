@@ -21,5 +21,5 @@ exampleResult.hex: binToHex exampleResult.bin
 decomposeMtx: decomposeMtx.cpp
 	g++ -O3 -o decomposeMtx decomposeMtx.cpp
 
-run: decomposeMtx
-	decomposeMtx smac/example.mtx exampleVal.hex
+run: getBenchmarkResults.py
+	getBenchmarkResults.py

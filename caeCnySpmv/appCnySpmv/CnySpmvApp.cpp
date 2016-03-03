@@ -272,6 +272,7 @@ int main(int argc, char *argv[])
     cerr << "time: " << processingTime << endl;
     cny_cp_free(yVector);
     cny_cp_free(xVector);
+    cout << "performance: " << gflops << endl;
     return 0;
 }
 
