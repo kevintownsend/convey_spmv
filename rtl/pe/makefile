@@ -123,3 +123,16 @@ vim :
 
 clean:
 	rm -rf work transcript
+
+x_vector_cache.prj:
+	echo -e "verilog work x_vector_cache.v\nverilog work ../std_fifo/std_fifo.v" > x_vector_cache.prj
+
+x_vector_cache_xst : x_vector_cache.prj
+	echo "run -ifn x_vector_cache.prj -ifmt mixed -top x_vector_cache -ofn x_vector_cache.ngc -ofmt NGC -p xc5vlx330-2FF1760 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+x_vector_cache_post_par.par: x_vector_cache_xst
+	ngdbuild x_vector_cache
+	map x_vector_cache
+	par x_vector_cache x_vector_cache_post_par
+
+cache_xst: x_vector_cache_post_par.par
