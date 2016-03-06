@@ -479,7 +479,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
             send_instruction <= 1;
         end
     end
-    localparam MIN_BUSY = 64;
+    localparam MIN_BUSY = 128;
     localparam LOG2_MIN_BUSY = log2(MIN_BUSY - 1);
     reg [LOG2_MIN_BUSY:0] min_busy_counter;
     always @(posedge clk_per) begin
@@ -539,10 +539,25 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
 
     scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
+    integer i, j;
     localparam PE_COUNT = 16;
+    localparam CONNECTION_STAGES = 2;
     //TODO: add registers to instruction systolic array
+    reg [63:0] instruction_array [0:PE_COUNT - 1][0:CONNECTION_STAGES - 1];
+    reg busy_array [0:PE_COUNT - 1][0:CONNECTION_STAGES - 1];
+    always @(posedge clk) begin
+        for(i = 0; i < PE_COUNT; i = i + 1) begin
+            instruction_array[i][0] <= instruction_connections[i];
+            busy_array[i][0] <= busy_connections[i];
+            for(j = 1; j < CONNECTION_STAGES; j = j + 1) begin
+                instruction_array[i][j] <= instruction_array[i][j - 1];
+                busy_array[i][j] <= busy_array[i][j - 1];
+            end
+        end
+    end
+
     generate for(g = 0; g < PE_COUNT; g = g + 1) begin: gen_pe
-        spmv_pe #(g) g_pe(clk_per, instruction_connections[g], instruction_connections[g+1], busy_connections[g], busy_connections[g+1],
+        spmv_pe #(g) g_pe(clk_per, instruction_array[g][CONNECTION_STAGES - 1], instruction_connections[g+1], busy_array[g][CONNECTION_STAGES - 1], busy_connections[g+1],
             req_mem_ld[g], req_mem_st[g], req_mem_addr[g], req_mem_d_or_tag[g], req_mem_stall[g], rsp_mem_push[g], rsp_mem_tag[g], rsp_mem_q[g], rsp_mem_stall[g],
             req_scratch_ld[g], req_scratch_st[g], req_scratch_addr[g], req_scratch_d[g], req_scratch_stall[g], rsp_scratch_push[g], rsp_scratch_q[g], rsp_scratch_stall[g]);
 
@@ -572,7 +587,6 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
     end endgenerate
 
     // synthesis translate_off
-    integer i;
     always @(posedge clk) begin
         $display("@verilog: cae_pers debug %d", $time);
         for(i = 0; i < PE_COUNT + 1; i = i + 1) begin

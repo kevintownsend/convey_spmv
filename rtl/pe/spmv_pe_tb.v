@@ -35,7 +35,7 @@ end
 
     integer i;
 initial begin
-    #100000000 $display("watchdog timer reached");
+    #10000000 $display("watchdog timer reached");
     $display("registers:");
     for(i = 0; i < 4; i = i + 1) begin
         $display("%d: %d", i, dut.registers[i]);
@@ -70,9 +70,9 @@ struct SmacHeader{
     ull r2[8];
 };
 */
-    //initial $readmemh("cant0.hex", mock_main_memory);
+    initial $readmemh("cant0.hex", mock_main_memory);
     //initial $readmemh("consph0.hex", mock_main_memory);
-    initial $readmemh("example.hex", mock_main_memory);
+    //initial $readmemh("example.hex", mock_main_memory);
     //initial $readmemh("example2.hex", mock_main_memory);
     wire [63:0] width = mock_main_memory[1];
     wire [63:0] height = mock_main_memory[2];

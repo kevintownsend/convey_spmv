@@ -22,7 +22,7 @@ run
 -bus_delimiter []
 -case Maintain
 -slice_utilization_ratio 100
--bram_utilization_ratio 50
+-bram_utilization_ratio 55
 -dsp_utilization_ratio 100
 -lc AUTO
 -reduce_control_sets OFF
@@ -37,7 +37,7 @@ run
 -auto_bram_packing NO
 -resource_sharing YES
 -async_to_sync NO
--shreg_min_size 16
+-shreg_min_size 8
 -use_dsp48 Auto
 -iobuf YES
 -max_fanout 64

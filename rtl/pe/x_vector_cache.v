@@ -2,7 +2,7 @@ module x_vector_cache(clk, rst, col, push_col, start_address, req_mem, req_mem_a
 //TODO: put x value fifo inside. x fifo small (32) and response fifo big (512) and is_cached_fifo (1024).
 parameter SUB_WIDTH = 8; //TODO: use includes
 parameter LOG2_SUB_WIDTH = log2(SUB_WIDTH - 1);
-parameter ALMOST_FULL_COUNT = 8;
+parameter ALMOST_FULL_COUNT = 16;
 input clk;
 input rst;
 input [31:0] col;
@@ -69,18 +69,18 @@ reg response_fifo_pop;
 wire [63:0] response_fifo_q;
 wire response_fifo_full;
 wire response_fifo_empty;
-std_fifo #(.WIDTH(64), .DEPTH(512), .LATENCY(1)) response_fifo(rst, clk, rsp_mem_push, response_fifo_pop, rsp_mem_q, response_fifo_q, response_fifo_full, response_fifo_empty, , , );
+localparam RESPONSE_FIFO_DEPTH=512;
+std_fifo #(.WIDTH(64), .DEPTH(RESPONSE_FIFO_DEPTH), .LATENCY(1)) response_fifo(rst, clk, rsp_mem_push, response_fifo_pop, rsp_mem_q, response_fifo_q, response_fifo_full, response_fifo_empty, , , );
 
 //TODO: keep track of in flight requests
-localparam RESPONSE_FIFO_DEPTH=512;
 localparam LOG2_RESPONSE_FIFO_DEPTH=log2(RESPONSE_FIFO_DEPTH-1);
 reg [LOG2_RESPONSE_FIFO_DEPTH:0] in_flight_counter;
 initial in_flight_counter = 0;
 always @(posedge clk) begin
-    if(response_fifo_pop && col_push_stage_0) begin
+    if(response_fifo_pop && req_x_vector) begin
     end else if(response_fifo_pop) begin
         in_flight_counter <= in_flight_counter - 1;
-    end else if(col_push_stage_0) begin
+    end else if(req_x_vector) begin
         in_flight_counter <= in_flight_counter + 1;
     end
     if(rst)

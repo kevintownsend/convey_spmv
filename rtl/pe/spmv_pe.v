@@ -294,7 +294,7 @@ assign busy_out = busy_out_r;
 
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
-    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(10)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
+    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
 
     wire mac_push_out;
     wire [63:0] mac_v_out;
