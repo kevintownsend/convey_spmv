@@ -8,8 +8,10 @@ module mac_tb;
     wire push_out;
     wire [63:0] v_out;
     reg eof;
+    wire stall;
+    reg stall_out;
 
-    mac #(INTERMEDIATOR_DEPTH) dut(clk, rst, wr, row, v0, v1, push_out, v_out, eof);
+    mac #(INTERMEDIATOR_DEPTH) dut(clk, rst, wr, row, v0, v1, push_out, v_out, eof, stall, stall_out);
 
     initial begin
         clk = 0;
@@ -34,6 +36,7 @@ module mac_tb;
         v0 = 0;
         v1 = 0;
         eof = 0;
+        stall_out = 0;
         #1000 rst = 0;
         #100;
         for(i = 0; i < 25; i = i + 1) begin

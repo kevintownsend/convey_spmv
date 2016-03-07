@@ -17,6 +17,7 @@ cpInstructionAE0:
     .signature pdk=65042
 	mov.AE0 %a8, $0, %aeg		# a8 contains address of a1
 	caep01.AE0 $0
+	mov.AE0 %aeg, $0, %a8
     rtn
 
 cpInstructionAE1:
@@ -25,6 +26,7 @@ cpInstructionAE1:
     .signature pdk=65042
 	mov.AE1 %a8, $0, %aeg		# a8 contains address of a1
 	caep01.AE1 $0
+	mov.AE1 %aeg, $0, %a8
     rtn
 
 cpInstructionAE2:
@@ -33,6 +35,7 @@ cpInstructionAE2:
     .signature pdk=65042
 	mov.AE2 %a8, $0, %aeg		# a8 contains address of a1
 	caep01.AE2 $0
+	mov.AE2 %aeg, $0, %a8
     rtn
 
 cpInstructionAE3:
@@ -41,6 +44,7 @@ cpInstructionAE3:
     .signature pdk=65042
 	mov.AE3 %a8, $0, %aeg		# a8 contains address of a1
 	caep01.AE3 $0
+	mov.AE3 %aeg, $0, %a8
     rtn
 
 cpInstructionAEall:
@@ -49,6 +53,7 @@ cpInstructionAEall:
     .signature pdk=65042
 	mov %a8, $0, %aeg		# a8 contains address of a1
 	caep01 $0
+	mov.AE0 %aeg, $0, %a8
     rtn
 
 #TODO: add function

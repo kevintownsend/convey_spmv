@@ -5,7 +5,7 @@ CNY_PDK_PHYS_DIR ?= ../phys_constraints
 NICE		?= nice -n0
 
 XILINX_MAP_OPTIONS += -register_duplication on
-XILINX_THREADS += 4
+XILINX_THREADS += 2
 
 ####################################################################
 # Include Convey Makefile Template

@@ -13,7 +13,10 @@ module x_vector_cache_tb;
     reg [63:0] rsp_mem_q;
     wire push_x;
     wire [63:0] x_val;
-    x_vector_cache #(SUB_WIDTH) dut(clk, rst, col, push_col, start_address, req_mem, req_mem_addr, rsp_mem_push, rsp_mem_q, push_x, x_val);
+    reg stall;
+    wire almost_full;
+
+    x_vector_cache #(SUB_WIDTH) dut(clk, rst, col, push_col, start_address, req_mem, req_mem_addr, rsp_mem_push, rsp_mem_q, push_x, x_val, stall, almost_full);
 
     initial begin
         #1000 $display("watchdog timer reached");
@@ -26,6 +29,7 @@ module x_vector_cache_tb;
     end
 
     initial begin
+        stall = 0;
         rst = 1;
         col = 0;
         push_col = 0;
@@ -33,11 +37,11 @@ module x_vector_cache_tb;
         #100 rst = 0;
         #100 push_col = 1;
         #10 push_col = 0;
-#10 push_col = 1;
-col = 1;
-#10 push_col = 1;
-col = 0;
-#10 push_col = 0;
+        #10 push_col = 1;
+        col = 1;
+        #10 push_col = 1;
+        col = 0;
+        #10 push_col = 0;
 
     end
 

@@ -11,17 +11,32 @@
 using namespace std;
 
 //typedef unsigned long long uint64;
+typedef unsigned long long ull;
+typedef long long ll;
 
 //TODO: replace with new assembly function
 extern "C" void cpTalk();
-extern "C" void cpInstructionAE0();
-extern "C" void cpInstructionAE1();
-extern "C" void cpInstructionAE2();
-extern "C" void cpInstructionAE3();
-extern "C" void cpInstructionAEall();
+extern "C" long cpInstructionAE0();
+extern "C" long cpInstructionAE1();
+extern "C" long cpInstructionAE2();
+extern "C" long cpInstructionAE3();
+extern "C" long cpInstructionAEall();
 
-typedef unsigned long long ull;
+const string registerNames[] = {"y vector address begin", "y vector address end", "x vector start", "mac nnz count down", "index opcodes steam", "index arguments stream", "fzip opocdes stream" , "fzip arguments stream", "index opcodes end address", "index arguments end address", "fzip opcodes end address", "fzip arguments end address", "index nnz count down", "fzip nnz count down"};
 
+const string debugRegisterNames[] = {"flags", "MAC stalls", "matrix value hold up", "x values hold up", "row indices hold up", "stead time", "RESERVED", "RESERVED",
+"RESERVED", "decoder steady time", "fifo 0 empty time", "fifo 1 empty time", "fifo 2 empty time", "fifo 3 empty time", "is common fifo almost full time", "is not common fifo almost full time"};
+
+    //0: index opcodes stream
+    //1: index argument stream
+    //2: fzip opcode stream
+    //3: fzip argument stream
+    //4: index opcodes end
+    //5: index argument end
+    //6: fzip opcode end
+    //7: fzip argument end
+    //8: index nnz count down
+    //9: fzip nnz count down
 struct SmacHeader{
     ull r0;
     ull width;
@@ -53,6 +68,13 @@ void steadyPart1(int ae, int pe, ull matrixData, SmacHeader matrixHeader, ull xP
 void steadyPart2(int ae, int pe);
 void reset(int ae, int pe);
 void resetAll();
+ull readRegister(int ae, int pe, int registerAddress);
+vector<ull> printRegisters(int ae, int pe);
+vector<vector<ull> > printRegisters();
+vector<vector<ull> > printRegisters(int count);
+void discoverProblemPEs(vector<vector<ull> > PEs);
+vector<vector<ull> > getDebugRegisters(int count);
+void printDebugInfo(vector<vector<ull> > debugRegisters);
 
 char charBuffer[100];
 
@@ -122,6 +144,8 @@ int main(int argc, char *argv[])
     for(ull i = 0; i < header.width; ++i)
         xVector[i] = 1.0;
     //loadRegister(0, 0, 0, (ull)yVector);
+    double processingTime = 0;
+    ull nnz = header.nnz;
     if(argc < 3){
         cerr << "loading deltas" << endl;
         loadDeltas(0, 0, (((ull)cnyBuffer)) + header.spmCodesPtr);
@@ -140,12 +164,18 @@ int main(int argc, char *argv[])
         cerr << "second part of steady" << endl;
         stealTardis();
         steadyPart2(0, 0);
-        returnTardis();
+        processingTime = returnTardis();
         cerr << "done second part of steady" << endl;
-        cerr << "y: " << endl;
-        //TODO: load registers
-        //TODO: run
-        //reset(0,0);
+        cerr << "registers: " << endl;
+        for(int i = 0; i < 12; i++){
+            cerr << "register" << i << " (" << registerNames[i] << "): " << readRegister(0, 0, i) << endl;
+        }
+        for(int i = 12; i < 14; i++){
+            cerr << "register" << i << " (" << registerNames[i] << "): " << ((int)readRegister(0, 0, i)) << endl;
+        }
+        cerr << "debug register: " << readRegister(0,0,14) << endl;
+        //cerr << "y: " << endl;
+
     }
     SmacHeader globalHeader = header;
 
@@ -202,18 +232,20 @@ int main(int argc, char *argv[])
             //cny_cp_free(cnyBuffer);
             yStart + header.height;
         }
-        cerr << "second part of steady" << endl;
         stealTardis();
+        cerr << "second part of steady" << endl;
         //steadyPart2(4, 16);
         steadyPart2(4, 16);
-        returnTardis();
         cerr << "done second part of steady" << endl;
+        processingTime = returnTardis();
+
         for(int i = 0; i < number; ++i){
             free(bufferVector[i]);
             cny_cp_free(cnyBufferVector[i]);
         }
     }
 
+    /*
     cerr << "checking" << endl;
     vector<double> goldY = check(argument + "After.mtx", xVector);
     ull mismatches = 0;
@@ -221,17 +253,26 @@ int main(int argc, char *argv[])
         if(yVector[i] + 0.001 < goldY[i] || yVector[i] - 0.001 > goldY[i]){
             cerr << "error mismatch gold: " << goldY[i] << " actual: " << yVector[i] << endl;
             mismatches++;
-            /*
-            if(goldY[i] > -0.001 && yVector[i] > -0.001 && goldY[i] < 0.001 && yVector[i] < 0.001){}
-            else{
-            }
-            */
         }
     }
     cerr << "total mismatches: " << mismatches << " percent: " << endl;
+    */
 
+    if(argc > 2){
+        vector<vector<ull> > registers = printRegisters(atoi(argv[2]));
+        discoverProblemPEs(registers);
+        vector<vector<ull> > debugRegisters = getDebugRegisters(atoi(argv[2]));
+        printDebugInfo(debugRegisters);
+    }
+
+    double flops = nnz * 2.0 / processingTime;
+    double gflops = flops / 1000 / 1000 / 1000;
+    cerr << "performance GFlops: " << gflops << endl;
+    cerr << "nnz: " << nnz << endl;
+    cerr << "time: " << processingTime << endl;
     cny_cp_free(yVector);
     cny_cp_free(xVector);
+    cout << "performance: " << gflops << endl;
     return 0;
 }
 
@@ -257,14 +298,18 @@ vector<double> check(string mtxFilename, double* xVector){
     return ret;
 }
 
+#define INSTRUCTION_OPCODE_WIDTH 4
+#define INSTRUCTION_PE_ADDR_WIDTH 5
+#define INSTRUCTION_ARG1_WIDTH 5
+#define INSTRUCTION_ARG2_WIDTH 48
 
 struct Instruction{
     enum operation {
-        NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY
-    }op: 3;
-    ull pe : 5;
-    ull arg1 : 4;
-    ull arg2 : 52;
+        NOP, RST, LD, LD_DELTA_CODES, LD_PREFIX_CODES, LD_COMMON_CODES, STEADY, READ, RETURN
+    }op: INSTRUCTION_OPCODE_WIDTH;
+    ull pe : INSTRUCTION_PE_ADDR_WIDTH;
+    ull arg1 : INSTRUCTION_ARG1_WIDTH;
+    ull arg2 : INSTRUCTION_ARG2_WIDTH;
     Instruction(){}
     Instruction(operation op, ull pe, ull arg1, ull arg2){
         this->op = op;
@@ -278,25 +323,28 @@ struct Instruction{
         this->arg1 = 0;
         this->arg2 = 0;
     }
-    /*
     Instruction(ull raw){
-        *this = *(*Instruction)&raw;
+        this->op = raw;
+        this->pe = raw >> INSTRUCTION_OPCODE_WIDTH;
+        this->arg1 = raw >> INSTRUCTION_OPCODE_WIDTH+INSTRUCTION_PE_ADDR_WIDTH;
+        this->arg2 = raw >> INSTRUCTION_OPCODE_WIDTH+INSTRUCTION_PE_ADDR_WIDTH+INSTRUCTION_ARG1_WIDTH;
     }
-    */
 };
-void sendInstruction(int ae, Instruction i){
+ull sendInstruction(int ae, Instruction i){
+    //cerr << "sending instruction " << i.op << " to ae" << ae << endl;
     switch(ae){
-        case 0:copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
+        case 0: return l_copcall_fmt(sig, cpInstructionAE0, "A", *(ull*)&i);
           break;
-        case 1:copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
+        case 1: return l_copcall_fmt(sig, cpInstructionAE1, "A", *(ull*)&i);
           break;
-        case 2:copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
+        case 2: return l_copcall_fmt(sig, cpInstructionAE2, "A", *(ull*)&i);
           break;
-        case 3:copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
+        case 3: return l_copcall_fmt(sig, cpInstructionAE3, "A", *(ull*)&i);
           break;
-        case 4:copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
+        case 4: return l_copcall_fmt(sig, cpInstructionAEall, "A", *(ull*)&i);
           break;
-        default: break;
+        default: return 0;
+                 break;
     }
 }
 
@@ -373,4 +421,87 @@ void loadRegister(int ae, int pe, int registerAddress, ull value){
     tmp.arg2 = value;
 
     sendInstruction(ae, tmp);
+}
+
+ull readRegister(int ae, int pe, int registerAddress){
+    //cerr << "reading register " << registerAddress << " on pe " << pe << " on ae " << ae << endl;
+    Instruction tmp;
+    tmp.op = Instruction::READ;
+    tmp.pe = pe;
+    tmp.arg1 = registerAddress;
+    tmp.arg2 = 0;
+    Instruction ret = (Instruction)sendInstruction(ae, tmp);
+    //cerr << "reagister value: " << ret.arg2 << endl;
+    //TODO: return return value
+    return ret.arg2;
+}
+
+vector<ull> printRegisters(int ae, int pe){
+    vector<ull> registers;
+    for(int i = 0; i < 16; ++i)
+        registers.push_back(readRegister(ae, pe, i));
+    cerr << "printing the register values of pe" << pe << " on ae" << ae << ":\n";
+    for(int i = 0; i < 14; ++i)
+        cerr << i << " (" << registerNames[i] << "): " << registers[i] << endl;
+    return registers;
+}
+vector<vector<ull> > printRegisters(){
+    return printRegisters(64);
+}
+vector<vector<ull> > printRegisters(int count){
+    vector<vector<ull> > ret;
+    for(int i = 0; i < count; ++i){
+        ret.push_back(printRegisters(i / 16, i % 16));
+    }
+    return ret;
+}
+
+void discoverProblemPEs(vector<vector<ull> > PEs){
+    for(int i = 0; i < PEs.size(); ++i){
+        if(PEs[i][0] != PEs[i][1]){
+            cerr << "PE " << i << " is a problem\n";
+            for(int j = 0; j < 14; ++j)
+                cerr << j << " (" << registerNames[j] << "): " << PEs[i][j] << endl;
+            cerr << "dirived numbers: " << endl;
+            cerr << "y values not stored: " << ((PEs[i][1] - PEs[i][0]) / 8) << endl;
+            cerr << "index stream bytes: " << (PEs[i][8] - PEs[i][4]) << endl;
+            cerr << "index argument stream bytes: " << (PEs[i][9] - PEs[i][5]) << endl;
+            cerr << "fzip stream bytes: " << (PEs[i][10] - PEs[i][6]) << endl;
+            cerr << "fzip argument stream bytes: " << (PEs[i][11] - PEs[i][7]) << endl;
+            cerr << "debug flag register: " << PEs[i][14] << endl;
+        }
+    }
+}
+
+vector<vector<ull> > getDebugRegisters(int count){
+    vector<vector<ull> > ret;
+    for(int i = 0; i < count; ++i){
+        vector<ull> debugRegisters;
+        for(int j = 14; j < 30; ++j)
+            debugRegisters.push_back(readRegister(i / 16, i % 16, j));
+        ret.push_back(debugRegisters);
+    }
+    return ret;
+}
+void printDebugInfo(vector<vector<ull> > debugRegisters){
+    int worstOffender = 0;
+    int highestClockCycles = 0;
+    for(int i = 0; i < debugRegisters.size(); ++i){
+        if(debugRegisters[i][5] > highestClockCycles){
+            worstOffender = i;
+            highestClockCycles = debugRegisters[i][5];
+        }
+
+        /*
+        cerr << "debug registers on PE" << i << endl;
+        for(int j = 0; j < debugRegisters[i].size(); ++j){
+            cerr << j << ": " << debugRegisters[i][j] << endl;
+        }
+        */
+    }
+    cerr << "Slowest PE: " << worstOffender << endl;
+    cerr << "debug registers: " << endl;
+    for(int i = 0; i < debugRegisters[worstOffender].size(); ++i)
+        cerr << i << " (" << debugRegisterNames[i] << "): " << debugRegisters[worstOffender][i] << endl;
+
 }

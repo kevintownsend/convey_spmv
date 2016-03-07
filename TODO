@@ -1,3 +1,3 @@
-TODO: be able to read from registers
-TODO: create reset that can recover from errors
-TODO: mac handle short heights
+TODO: shipsec1 argument stream issue
+TODO: fix x_vector caching to be efficient
+TODO: benchmark all matricies

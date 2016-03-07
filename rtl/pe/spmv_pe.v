@@ -31,7 +31,13 @@ output rsp_scratch_stall;
 
 
 
-reg rst, next_rst;
+reg rst, rst_1, pre_rst, next_pre_rst;
+
+initial begin
+    rst = 1;
+    rst_1 = 1;
+    pre_rst = 1;
+end
 reg state, next_state;
 localparam IDLE = 0;
 localparam STEADY = 1;
@@ -39,25 +45,45 @@ localparam REGISTER_START = 0;
 localparam REGISTER_END = 4;
 initial state = IDLE;
 reg [47:0] registers [REGISTER_START:REGISTER_END - 1], next_registers[REGISTER_START:REGISTER_END - 1];
-//TODO: wire registers
-wire [47:0] register_0 = registers[0];
-wire [47:0] register_1 = registers[1];
-wire [47:0] register_2 = registers[2];
-wire [47:0] register_3 = registers[3];
+localparam DEBUG_REGISTERS_START = 14;
+localparam DEBUG_REGISTERS_END = 22;
+reg [47:0] debug_registers[DEBUG_REGISTERS_START:DEBUG_REGISTERS_END - 1], next_debug_registers[DEBUG_REGISTERS_START:DEBUG_REGISTERS_END - 1];
+wire [47:0] register_0 = registers[0]; //y vector address
+wire [47:0] register_1 = registers[1]; //y vector address end
+wire [47:0] register_2 = registers[2]; //x vector address
+wire [47:0] register_3 = registers[3]; //nnz count down
+wire [47:0] debug_register_0 = debug_registers[DEBUG_REGISTERS_START];
+wire [47:0] debug_register_1 = debug_registers[DEBUG_REGISTERS_START + 1];
+wire [47:0] debug_register_2 = debug_registers[DEBUG_REGISTERS_START + 2];
+wire [47:0] debug_register_3 = debug_registers[DEBUG_REGISTERS_START + 3];
+wire [47:0] debug_register_4 = debug_registers[DEBUG_REGISTERS_START + 4];
+wire [47:0] debug_register_5 = debug_registers[DEBUG_REGISTERS_START + 5];
+wire [47:0] debug_register_6 = debug_registers[DEBUG_REGISTERS_START + 6];
+wire [47:0] debug_register_7 = debug_registers[DEBUG_REGISTERS_START + 7];
 integer i;
 always @(posedge clk) begin
-    rst <= next_rst;
+    pre_rst <= next_pre_rst;
+    rst_1 <= pre_rst;
+    rst <= rst_1;
     state <= next_state;
     for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
         registers[i] <= next_registers[i];
+    for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1)
+        debug_registers[i] <= next_debug_registers[i];
 end
 wire registers_equal = registers[0] == registers[1];
 reg busy_status;
 wire decoder_busy;
 reg [63:0] op_in_r, op_out_r, op_r;
-initial op_in_r = OP_RST;
-initial op_out_r = OP_RST;
-initial op_r = OP_RST;
+initial op_in_r[OPCODE_ARG_PE - 1:0] = OP_RST;
+initial op_in_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 16;
+initial op_in_r[63:OPCODE_ARG_1] = 0;
+initial op_out_r[OPCODE_ARG_PE - 1:0] = OP_RST;
+initial op_out_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 16;
+initial op_out_r[63:OPCODE_ARG_1] = 0;
+initial op_r[OPCODE_ARG_PE - 1:0] = OP_RST;
+initial op_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = 16;
+initial op_r[63:OPCODE_ARG_1] = 0;
 reg busy_in_r, busy_out_r;
 reg mac_input_stage_1;
 reg mac_mem_req_stage_1;
@@ -70,8 +96,13 @@ always @(posedge clk) begin
         steady_timeout <= steady_timeout + 1;
 end
 reg [63:0] next_op_out_r;
+wire [63:0] decoder_op_out;
+    wire mac_stall;
+    wire val_fifo_empty;
+    wire row_fifo_empty;
+    wire x_val_fifo_empty;
 always @* begin
-    next_rst = 0;
+    next_pre_rst = 0;
     next_state = state;
     busy_status = 0;
     //for(i = REGISTER_START; i < REGISTER_END; i = i + 1)
@@ -80,8 +111,18 @@ always @* begin
     next_registers[1] = register_1;
     next_registers[2] = register_2;
     next_registers[3] = register_3;
+    next_debug_registers[DEBUG_REGISTERS_START] = debug_register_0;
+    next_debug_registers[DEBUG_REGISTERS_START + 1] = debug_register_1;
+    next_debug_registers[DEBUG_REGISTERS_START + 2] = debug_register_2;
+    next_debug_registers[DEBUG_REGISTERS_START + 3] = debug_register_3;
+    next_debug_registers[DEBUG_REGISTERS_START + 4] = debug_register_4;
+    next_debug_registers[DEBUG_REGISTERS_START + 5] = debug_register_5;
+    next_debug_registers[DEBUG_REGISTERS_START + 6] = debug_register_6;
+    next_debug_registers[DEBUG_REGISTERS_START + 7] = debug_register_7;
     busy_status = decoder_busy;
     next_op_out_r = op_in_r; // || decoder_op_out;
+    if(decoder_op_out[OPCODE_ARG_PE - 1:0] == OP_RETURN)
+        next_op_out_r = decoder_op_out;
     case(state)
         STEADY: begin
             busy_status = 1;
@@ -99,7 +140,7 @@ always @* begin
     if(op_r[OPCODE_ARG_1 - 1] || op_r[OPCODE_ARG_1 - 2:OPCODE_ARG_PE] == ID) begin
         case(op_r[OPCODE_ARG_PE - 1:0])
             OP_RST: begin
-                next_rst = 1;
+                next_pre_rst = 1;
                 next_state = 0;
             end
             OP_STEADY: begin
@@ -114,15 +155,56 @@ always @* begin
                     if(i == op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
                         next_registers[i] = op_r[63:OPCODE_ARG_2];
                 end
+                for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1) begin
+                    if(i == op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1])
+                        next_debug_registers[i] = op_r[63:OPCODE_ARG_2];
+                end
             end
             OP_READ: begin
-                if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END)
-                    next_op_out_r = {registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]], 12'HFFF};
+                $display("at OP_READ");
+                $display("DEBUG REGISTERS:");
+                for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1) begin
+                    $display("%d: %d", i, debug_registers[i]);
+                end
+                if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= REGISTER_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < REGISTER_END) begin
+                    $display("in range");
+                    next_op_out_r[OPCODE_ARG_PE - 1:0] = OP_RETURN;
+                    next_op_out_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = ID;
+                    next_op_out_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1];
+                    next_op_out_r[63:OPCODE_ARG_2] = registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]];
+                end else if(op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] >= DEBUG_REGISTERS_START && op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] < DEBUG_REGISTERS_END) begin
+                    next_op_out_r[OPCODE_ARG_PE - 1:0] = OP_RETURN;
+                    next_op_out_r[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] = ID;
+                    next_op_out_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1] = op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1];
+                    next_op_out_r[63:OPCODE_ARG_2] = debug_registers[op_r[OPCODE_ARG_2 - 1:OPCODE_ARG_1]];
+                end
             end
         endcase
     end
-end
+    if(state == STEADY) begin
+        next_debug_registers[DEBUG_REGISTERS_START] = 0;
+        next_debug_registers[DEBUG_REGISTERS_START][0] = mac_stall;
+        next_debug_registers[DEBUG_REGISTERS_START][1] = val_fifo_empty;
+        next_debug_registers[DEBUG_REGISTERS_START][2] = x_val_fifo_empty;
+        next_debug_registers[DEBUG_REGISTERS_START][3] = row_fifo_empty;
+        //TODO: count times mac stalls
+        if(mac_stall)
+            next_debug_registers[DEBUG_REGISTERS_START + 1] = debug_register_1 + 1;
+        if(val_fifo_empty)
+            next_debug_registers[DEBUG_REGISTERS_START + 2] = debug_register_2 + 1;
+        if(x_val_fifo_empty)
+            next_debug_registers[DEBUG_REGISTERS_START + 3] = debug_register_3 + 1;
+        if(row_fifo_empty)
+            next_debug_registers[DEBUG_REGISTERS_START + 4] = debug_register_4 + 1;
 
+        next_debug_registers[DEBUG_REGISTERS_START + 5] = debug_register_5 + 1;
+    end
+    if(rst) begin
+        for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1) begin
+            next_debug_registers[i] = 0;
+        end
+    end
+end
 
 always @(posedge clk) begin
     op_in_r <= op_in;
@@ -155,7 +237,7 @@ assign busy_out = busy_out_r;
     //TODO: finish
     always @(posedge clk) decoder_mem_req_stall <= decoder_mem_req_fifo_almost_full;
 
-    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
+    sparse_matrix_decoder #(ID, 4) decoder(clk, op_r, decoder_op_out, decoder_busy, decoder_req_mem_ld, decoder_req_mem_addr, decoder_req_mem_tag, decoder_mem_req_stall, decoder_rsp_mem_push, rsp_mem_tag_stage_1[2:1], rsp_mem_q_stage_1, decoder_rsp_mem_stall, req_scratch_ld, req_scratch_st, req_scratch_addr, req_scratch_d, req_scratch_stall, rsp_scratch_push, rsp_scratch_q, rsp_scratch_stall, decoder_push_index, decoder_row, decoder_col, decoder_stall_index, decoder_push_val, decoder_val, decoder_stall_val);
     reg rsp_mem_push_stage_1;
     always @(posedge clk) begin
         rsp_mem_push_stage_1 <= rsp_mem_push;
@@ -176,7 +258,9 @@ assign busy_out = busy_out_r;
     reg cache_rsp_mem_push;
     wire cache_push_x;
     wire [63:0] cache_x_val;
-    x_vector_cache #(SUB_WIDTH) cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val);
+    wire cache_almost_full;
+    wire x_val_fifo_almost_full;
+    x_vector_cache #(SUB_WIDTH) cache(clk, rst, decoder_col, decoder_push_index, registers[2], cache_req_mem, cache_req_mem_addr, cache_rsp_mem_push, rsp_mem_q_stage_1, cache_push_x, cache_x_val, x_val_fifo_almost_full, cache_almost_full);
 
     always @*
         cache_rsp_mem_push <= rsp_mem_push_stage_1 && rsp_mem_tag_stage_1[0];
@@ -186,35 +270,31 @@ assign busy_out = busy_out_r;
     wire cache_mem_req_fifo_full;
     wire cache_mem_req_fifo_empty;
     wire cache_mem_req_fifo_almost_full;
-    std_fifo #(.WIDTH(48), .DEPTH(32), .ALMOST_FULL_COUNT(8)) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
+    std_fifo #(.WIDTH(48), .DEPTH(32), .ALMOST_FULL_COUNT(16)) cache_mem_req_fifo(rst, clk, cache_req_mem, cache_mem_req_fifo_pop, cache_req_mem_addr, cache_mem_req_fifo_q, cache_mem_req_fifo_full, cache_mem_req_fifo_empty, , , cache_mem_req_fifo_almost_full);
 
-    wire mac_stall;
     reg mac_input_stage_0;
     wire [63:0] val_fifo_q;
     wire val_fifo_full;
-    wire val_fifo_empty;
     wire val_fifo_almost_full;
     std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) val_fifo(rst, clk, decoder_push_val, mac_input_stage_0, decoder_val, val_fifo_q, val_fifo_full, val_fifo_empty, , , val_fifo_almost_full);
     always @(posedge clk) decoder_stall_val <= val_fifo_almost_full;
 
     wire [31:0] row_fifo_q;
     wire row_fifo_full;
-    wire row_fifo_empty;
     wire row_fifo_almost_full;
     std_fifo #(.WIDTH(32), .DEPTH(512), .ALMOST_FULL_COUNT(8)) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
-    reg cache_mem_req_fifo_almost_full_r, row_fifo_almost_full_r;
+    reg cache_mem_req_fifo_almost_full_r, row_fifo_almost_full_r, cache_almost_full_r;
     always @(posedge clk) begin
         //decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
         cache_mem_req_fifo_almost_full_r <= cache_mem_req_fifo_almost_full;
         row_fifo_almost_full_r <= row_fifo_almost_full;
-        decoder_stall_index <= cache_mem_req_fifo_almost_full_r || row_fifo_almost_full_r;
+        cache_almost_full_r <= cache_almost_full;
+        decoder_stall_index <= cache_mem_req_fifo_almost_full_r || row_fifo_almost_full_r || cache_almost_full_r;
     end
 
     wire [63:0] x_val_fifo_q;
     wire x_val_fifo_full;
-    wire x_val_fifo_empty;
-    wire x_val_fifo_almost_full;
-    std_fifo #(.WIDTH(64), .DEPTH(512), .ALMOST_FULL_COUNT(10)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
+    std_fifo #(.WIDTH(64), .DEPTH(32), .ALMOST_FULL_COUNT(8)) x_val_fifo(rst, clk, cache_push_x, mac_input_stage_0, cache_x_val, x_val_fifo_q, x_val_fifo_full, x_val_fifo_empty, , , x_val_fifo_almost_full);
 
     wire mac_push_out;
     wire [63:0] mac_v_out;
@@ -385,6 +465,8 @@ assign busy_out = busy_out_r;
             $display("memory response");
         end
         */
+        if(req_mem_ld)
+            $display("@verilog: %m req_mem_ld addr: %d", req_mem_addr);
 
     end
 
