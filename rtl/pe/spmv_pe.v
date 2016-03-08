@@ -201,7 +201,7 @@ always @* begin
         if(req_mem_stall)
             next_debug_registers[DEBUG_REGISTERS_START + 6] = debug_register_6 + 1;
         if(req_scratch_stall)
-            next_debug_registres[DEBUG_REGISTERS_START + 7] = debug_register_7 + 1;
+            next_debug_registers[DEBUG_REGISTERS_START + 7] = debug_register_7 + 1;
     end
     if(rst) begin
         for(i = DEBUG_REGISTERS_START; i < DEBUG_REGISTERS_END; i = i + 1) begin
