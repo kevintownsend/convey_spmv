@@ -1,5 +1,7 @@
 set -tmpdir "./xst/projnav.tmp"
 set -xsthdpdir "./xst"
+set -checkcmdline no
+set -use_limited_stack 1
 run
 -ifn DESIGN.prj
 -ifmt mixed

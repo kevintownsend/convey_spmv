@@ -4,6 +4,7 @@
 CNY_PDK_PHYS_DIR ?= ../phys_constraints
 NICE		?= nice -n0
 
+#XILINX_XST_OPTIONS += -set
 XILINX_MAP_OPTIONS += -register_duplication on
 XILINX_THREADS += 2
 
