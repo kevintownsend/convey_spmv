@@ -176,6 +176,8 @@ int main(int argc, char *argv[])
         cerr << "debug register: " << readRegister(0,0,14) << endl;
         //cerr << "y: " << endl;
 
+        vector<vector<ull> > debugRegisters = getDebugRegisters(1);
+        printDebugInfo(debugRegisters);
     }
     SmacHeader globalHeader = header;
 
