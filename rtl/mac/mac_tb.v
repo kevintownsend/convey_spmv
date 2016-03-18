@@ -29,6 +29,7 @@ module mac_tb;
     end
 
     integer i = 0;
+    integer stall_count = 0;
     initial begin
         rst = 1;
         wr = 0;
@@ -40,6 +41,11 @@ module mac_tb;
         #1000 rst = 0;
         #100;
         for(i = 0; i < 25; i = i + 1) begin
+            while(stall) begin
+                stall_count = stall_count + 1;
+                wr = 0;
+                #10;
+            end
             wr = 1;
             row = row_index[i];
             v0 = floats[i];
