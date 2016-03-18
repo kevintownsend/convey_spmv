@@ -54,3 +54,11 @@ if(not os.path.isfile("save0")):
     save0File.write(str(fpgaPerformance) + "\n")
     save0File.close()
 #TODO: collect info
+save0File = open("save0", "r")
+matrices=eval(save0File.readline())
+fpgaPerformance=eval(save0File.readline())
+print(matrices)
+print(fpgaPerformance)
+#TODO: cpu performance
+#TODO: gpu performance
+#TODO: M, N, nnz info
