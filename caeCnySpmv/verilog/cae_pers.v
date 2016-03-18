@@ -487,7 +487,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
             min_busy_counter[LOG2_MIN_BUSY] <= 1;
         if(min_busy_counter[LOG2_MIN_BUSY])
             min_busy_counter <= min_busy_counter + 1;
-        if(reset_per)
+        if(r_reset)
             min_busy_counter <= 64;
     end
     wire [0:16] busy_connections;
@@ -512,7 +512,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         instruction <= 0;
         if(send_instruction)
             instruction <= w_aeg[0];
-        if(reset_per || (min_busy_counter[LOG2_MIN_BUSY] && instruction[OPCODE_ARG_PE:0] == 1) ||  watch_dog_timer[20]) begin
+        if(r_reset || (min_busy_counter[LOG2_MIN_BUSY] && instruction[OPCODE_ARG_PE:0] == 1) ||  watch_dog_timer[20]) begin
             instruction[OPCODE_ARG_PE - 1:0] <= 1;
             instruction[OPCODE_ARG_1 - 1:OPCODE_ARG_PE] <= 16;
         end
@@ -537,7 +537,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         assign rsp_scratch_q[g] = rsp_scratch_q_unrolled[(SCRATCH_PAD_PORTS-g)*64 -1 -:64];
     end endgenerate
 
-    scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(reset_per, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
+    scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(r_reset, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
     integer i;
     localparam PE_COUNT = 16;

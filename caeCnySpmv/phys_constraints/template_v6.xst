@@ -42,7 +42,7 @@ run
 -shreg_min_size 8
 -use_dsp48 Auto
 -iobuf YES
--max_fanout 64
+-max_fanout 16
 -bufg 0
 -register_duplication YES
 -register_balancing YES
