@@ -14,7 +14,7 @@ run
 -power NO
 -iuc NO
 -keep_hierarchy No
--netlist_hierarchy As_Optimized
+-netlist_hierarchy Rebuilt
 -rtlview Yes
 -glob_opt AllClockNets
 -read_cores YES
@@ -24,7 +24,7 @@ run
 -bus_delimiter []
 -case Maintain
 -slice_utilization_ratio 100
--bram_utilization_ratio 55
+-bram_utilization_ratio 65
 -dsp_utilization_ratio 100
 -lc AUTO
 -reduce_control_sets OFF
@@ -37,16 +37,15 @@ run
 -shreg_extract YES
 -rom_style Auto
 -auto_bram_packing NO
--resource_sharing YES
+-resource_sharing NO
 -async_to_sync NO
 -shreg_min_size 8
 -use_dsp48 Auto
 -iobuf YES
--max_fanout 16
 -bufg 0
 -register_duplication YES
 -register_balancing YES
--optimize_primitives NO
+-optimize_primitives YES
 -use_clock_enable Auto
 -use_sync_set Auto
 -use_sync_reset Auto

@@ -537,7 +537,7 @@ assign mc7_rsp_stall_o = rsp_mem_stall[15];
         assign rsp_scratch_q[g] = rsp_scratch_q_unrolled[(SCRATCH_PAD_PORTS-g)*64 -1 -:64];
     end endgenerate
 
-    scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 64) shared_memory(r_reset, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
+    scratch_pad #(SCRATCH_PAD_PORTS, 64, 512, 512) shared_memory(r_reset, clk_per, req_scratch_ld, req_scratch_st, req_scratch_d_unrolled, rsp_scratch_q_unrolled, req_scratch_addr_unrolled, rsp_scratch_stall, rsp_scratch_push, req_scratch_stall);
 
     integer i;
     localparam PE_COUNT = 16;
