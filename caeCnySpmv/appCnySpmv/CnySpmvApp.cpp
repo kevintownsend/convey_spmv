@@ -222,9 +222,13 @@ int main(int argc, char *argv[])
             cerr << "loading fzip codes" << endl;
             loadFzipCodes(i / 16, i % 16, (((ull)cnyBuffer)) + header.fzipCodesPtr);
             cerr << "done loading fzip codes" << endl;
-            cerr << "loading commons" << endl;
-            loadCommonCodes(i / 16, i % 16, (((ull)cnyBuffer)) + header.commonDoublesPtr);
-            cerr << "done loading commons" << endl;
+            if(i % 16 != 0){
+                cerr << "skipping loading of commons" << endl;
+            }else{
+                cerr << "loading commons" << endl;
+                loadCommonCodes(i / 16, i % 16, (((ull)cnyBuffer)) + header.commonDoublesPtr);
+                cerr << "done loading commons" << endl;
+            }
             cerr << "first part of steady" << endl;
             steadyPart1(i / 16, i % 16, (ull)cnyBuffer, header, (ull)xVector, (ull)yVector + yStart * 8);
             cerr << "done first part of steady" << endl;
