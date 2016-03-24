@@ -5,40 +5,26 @@ import os
 import os.path
 
 #TODO: create tmp folder
-proc = Popen(["mkdir", "tmp2"])
+proc = Popen(["mkdir", "tmp3"])
 proc.wait()
-os.chdir("tmp2")
+os.chdir("tmp3")
 #check if zip file exists
 if(not os.path.isfile("save0")):
-    matrices = ["hollywood-2009", "Flan_1565", "HV15R", "kron_g500-logn21", "indochina-2004"]
-    web = ["http://www.cise.ufl.edu/research/sparse/MM/LAW/hollywood-2009.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Janna/Flan_1565.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Fluorem/HV15R.tar.gz"]
-    for i in range(1):
-        proc = Popen(["wget", web[i]])
-        proc.wait()
-        proc = Popen(["tar", "-xzf", matrices[i] + ".tar.gz"])
-        proc.wait()
+    #matrices = ["hollywood-2009", "Flan_1565", "HV15R", "kron_g500-logn21", "indochina-2004"]
+    #web = ["http://www.cise.ufl.edu/research/sparse/MM/LAW/hollywood-2009.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Janna/Flan_1565.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Fluorem/HV15R.tar.gz"]
+    matrices = ["wikipedia-20061104", "spal_004", "ldoor", "nlpkk120", "boneS10", "cage15", "nlpkkt160", "nlpkkt200"]
+    web = ["http://www.cise.ufl.edu/research/sparse/MM/Gleich/wikipedia-20061104.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Mittelmann/spal_004.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/GHS_psdef/ldoor.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt120.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Oberwolfach/boneS10.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/vanHeukelum/cage15.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt160.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt200.tar.gz"]
+
+    for i in range(len(matrices)):
+        if(not os.path.isfile(matrices[i] + "/" + matrices[i] + ".mtx")):
+            proc = Popen(["wget", web[i]])
+            proc.wait()
+            proc = Popen(["tar", "-xzf", matrices[i] + ".tar.gz"])
+            proc.wait()
+            proc = Popen(["mv", matrices[i] + "/" + matrices[i] + ".mtx", "."])
+            proc.wait()
 
 
-sys.exit(0)
-if(not os.path.isfile("save0")):
-    if(not os.path.isfile("matrices.zip")):
-        proc = Popen(["wget", "http://www.nvidia.com/content/NV_Research/matrices.zip"])
-        proc.wait()
-#get list of matrices
-    proc = Popen(["unzip", "-l", "-qq", "matrices.zip"], stdout=PIPE)
-    line = proc.stdout.read().decode('UTF-8')
-    proc.wait()
-    splitLine = line.split()
-
-    proc = Popen(["unzip", "-qq", "-o", "matrices.zip"])
-    proc.wait()
-    matrices = []
-    for i in range(len(splitLine)):
-        if(i % 4 == 3):
-            filename = splitLine[i]
-            if(filename.endswith(".mtx")):
-                matrices.append(filename[:-4])
-    print(matrices)
     fpgaPerformance = []
     for m in matrices:
         proc = Popen(["mkdir", m])

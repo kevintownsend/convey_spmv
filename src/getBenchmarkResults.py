@@ -33,7 +33,10 @@ if(not os.path.isfile("save0")):
         proc = Popen(["mkdir", m])
         proc.wait()
         proc = Popen(["../smac/smac", "-c", "--multipleFiles=64", m + ".mtx", m + "/" + m + ".smac"])
-        proc.wait()
+        rc = proc.wait()
+        if(rc == 2):
+            print("smac returned an error")
+            exit(1)
         proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
         proc.wait()
         proc = Popen(["export CNY_PERSONALITY_PATH=../../caeCnySpmv/personalities;", "echo hello world"], shell=True)
