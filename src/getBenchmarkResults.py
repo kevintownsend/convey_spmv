@@ -6,6 +6,7 @@ import os.path
 
 #TODO: create tmp folder
 proc = Popen(["mkdir", "tmp"])
+proc.wait()
 os.chdir("tmp")
 #check if zip file exists
 
