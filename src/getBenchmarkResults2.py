@@ -12,16 +12,18 @@ os.chdir("tmp2")
 if(not os.path.isfile("save0")):
     matrices = ["dw8192", "t2d_q9", "epb1", "raefsky1", "psmigr_2", "torso2"]
     web = ["http://www.cise.ufl.edu/research/sparse/MM/Bai/dw8192.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/TKK/t2d_q9.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/Averous/epb1.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/Simon/raefsky1.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/HB/psmigr_2.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/Norris/torso2.tar.gz",]
+    fpgaPerformance = []
     for i in range(len(matrices)):
-        proc = Popen(["wget", web[i]])
-        proc.wait()
+        inputLine = input()
+        if(not os.path.isfile(web[i].split("/")[-1])):
+            proc = Popen(["wget", web[i]])
+            proc.wait()
         proc = Popen(["tar", "-xzf", matrices[i] + ".tar.gz"])
         proc.wait()
         proc = Popen(["mv", matrices[i] + "/" + matrices[i] + ".mtx", "."])
         proc.wait()
 
-    fpgaPerformance = []
-    for m in matrices:
+        m = matrices[i]
         proc = Popen(["mkdir", m])
         proc.wait()
         proc = Popen(["../smac/smac", "-c", "--multipleFiles=64", m + ".mtx", m + "/" + m + ".smac"])
@@ -41,6 +43,10 @@ if(not os.path.isfile("save0")):
                 splitLine = line.split(':')
                 if(splitLine[0].strip() == "performance"):
                     fpgaPerformance.append(float(splitLine[1]))
+        proc = Popen(["rm", "-rf", m])
+        proc.wait()
+        proc = Popen(["rm", m + ".mtx"])
+        proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
     save0File.write(str(fpgaPerformance) + "\n")

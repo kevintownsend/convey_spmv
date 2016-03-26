@@ -12,25 +12,31 @@ os.chdir("tmp3")
 if(not os.path.isfile("save0")):
     #matrices = ["hollywood-2009", "Flan_1565", "HV15R", "kron_g500-logn21", "indochina-2004"]
     #web = ["http://www.cise.ufl.edu/research/sparse/MM/LAW/hollywood-2009.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Janna/Flan_1565.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Fluorem/HV15R.tar.gz"]
-    matrices = ["wikipedia-20061104", "spal_004", "ldoor", "nlpkk120", "boneS10", "cage15", "nlpkkt160", "nlpkkt200"]
+    matrices = ["wikipedia-20061104", "spal_004", "ldoor", "nlpkkt120", "boneS10", "cage15", "nlpkkt160", "nlpkkt200"]
     web = ["http://www.cise.ufl.edu/research/sparse/MM/Gleich/wikipedia-20061104.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Mittelmann/spal_004.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/GHS_psdef/ldoor.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt120.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Oberwolfach/boneS10.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/vanHeukelum/cage15.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt160.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt200.tar.gz"]
 
+    fpgaPerformance = []
     for i in range(len(matrices)):
-        if(not os.path.isfile(matrices[i] + "/" + matrices[i] + ".mtx")):
+        if(not os.path.isfile(web[i].split("/")[-1])):
             proc = Popen(["wget", web[i]])
             proc.wait()
-            proc = Popen(["tar", "-xzf", matrices[i] + ".tar.gz"])
-            proc.wait()
-            proc = Popen(["mv", matrices[i] + "/" + matrices[i] + ".mtx", "."])
-            proc.wait()
+        proc = Popen(["tar", "-xzf", matrices[i] + ".tar.gz"])
+        proc.wait()
+        proc = Popen(["mv", matrices[i] + "/" + matrices[i] + ".mtx", "."])
+        proc.wait()
 
-
-    fpgaPerformance = []
-    for m in matrices:
+        m = matrices[i]
         proc = Popen(["mkdir", m])
         proc.wait()
         proc = Popen(["../smac/smac", "-c", "--multipleFiles=64", m + ".mtx", m + "/" + m + ".smac"])
-        proc.wait()
+        rc = proc.wait()
+        if(rc == 2):
+            print("smac returned an error")
+            save0File = open("save0","w")
+            save0File.write(str(matrices) + "\n")
+            save0File.write(str(fpgaPerformance) + "\n")
+            save0File.close()
+            exit(1)
         proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
         proc.wait()
         proc = Popen(["export CNY_PERSONALITY_PATH=../../caeCnySpmv/personalities;", "echo hello world"], shell=True)
@@ -46,6 +52,10 @@ if(not os.path.isfile("save0")):
                 splitLine = line.split(':')
                 if(splitLine[0].strip() == "performance"):
                     fpgaPerformance.append(float(splitLine[1]))
+        proc = Popen(["rm", "-rf", m])
+        proc.wait()
+        proc = Popen(["rm", m + ".mtx"])
+        proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
     save0File.write(str(fpgaPerformance) + "\n")
