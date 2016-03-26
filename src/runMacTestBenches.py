@@ -51,19 +51,13 @@ if(not os.path.isfile("save0") or force):
             exit(1)
         proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
         proc.wait()
-        proc = Popen(["export CNY_PERSONALITY_PATH=../../caeCnySpmv/personalities;", "echo hello world"], shell=True)
-        proc.wait()
-        my_env = os.environ
-        my_env["CNY_PERSONALITY_PATH"] = "../../caeCnySpmv/personalities"
-        proc = Popen(["../../caeCnySpmv/appCnySpmv/CnySpmvApp.exe", m + "/" + m, "64"], env=my_env, stdout=PIPE)
 
-        lines = proc.stdout.read().decode('UTF-8').split('\n')
-        proc.wait()
-        for line in lines:
-            if(line.find(":") != -1):
-                splitLine = line.split(':')
-                if(splitLine[0].strip() == "performance"):
-                    fpgaPerformance.append(float(splitLine[1]))
+        #TODO: change to /rtl/mac dir
+        #proc = Popen(["vsim"], stdout=PIPE)
+        #TODO: change from /rtl/mac dir
+
+        #lines = proc.stdout.read().decode('UTF-8').split('\n')
+        #proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
     save0File.write(str(fpgaPerformance) + "\n")
