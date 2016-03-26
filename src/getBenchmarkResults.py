@@ -4,6 +4,11 @@ from subprocess import *
 import os
 import os.path
 
+#TODO: options:
+#TODO: clean
+#TODO: force
+
+
 #TODO: create tmp folder
 proc = Popen(["mkdir", "tmp"])
 proc.wait()
