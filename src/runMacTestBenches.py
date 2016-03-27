@@ -60,12 +60,10 @@ if(not os.path.isfile("save0") or force):
         #proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
-    save0File.write(str(fpgaPerformance) + "\n")
     save0File.close()
 #TODO: collect info
 save0File = open("save0", "r")
 matrices=eval(save0File.readline())
-fpgaPerformance=eval(save0File.readline())
 print(matrices)
 print(fpgaPerformance)
 
