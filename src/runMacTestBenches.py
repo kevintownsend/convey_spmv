@@ -21,7 +21,7 @@ proc.wait()
 os.chdir("tmp")
 #check if zip file exists
 
-if(not os.path.isfile("save0") or force):
+if(not os.path.isfile("mac_save0") or force):
     if(not os.path.isfile("matrices.zip")):
         proc = Popen(["wget", "http://www.nvidia.com/content/NV_Research/matrices.zip"])
         proc.wait()
@@ -40,7 +40,8 @@ if(not os.path.isfile("save0") or force):
             if(filename.endswith(".mtx")):
                 matrices.append(filename[:-4])
     print(matrices)
-    fpgaPerformance = []
+    macStall = []
+    nnzValues = []
     for m in matrices:
         proc = Popen(["mkdir", m])
         proc.wait()
@@ -52,20 +53,32 @@ if(not os.path.isfile("save0") or force):
         proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
         proc.wait()
 
-        #TODO: change to /rtl/mac dir
-        #proc = Popen(["vsim"], stdout=PIPE)
-        #TODO: change from /rtl/mac dir
+        os.chdir("../../rtl/mac")
+        proc0 = Popen(["echo", "-e", "vsim -gMATRIX_FILENAME=\"../../src/tmp/" + m + "/" + m + ".mtx\" work.mac_tb\nset StdArithNoWarnings 1\nset NumericStdNoWarnings 1\nrun -all"], stdout=PIPE)
+        proc1 = Popen(["vsim"], stdin=proc0.stdout , stdout=PIPE)
+        lines = proc1.stdout.read().decode('UTF-8').split('\n')
+        proc1.wait()
+        os.chdir("../../src/tmp")
 
-        #lines = proc.stdout.read().decode('UTF-8').split('\n')
-        #proc.wait()
-    save0File = open("save0","w")
+        for line in lines:
+            print(line)
+            if "@verilog:stall_count" in line:
+                line = line.split(":")
+                macStall.append(int(line[2]))
+                nnzValues.append(int(line[3]))
+    save0File = open("mac_save0","w")
     save0File.write(str(matrices) + "\n")
+    save0File.write(str(macStall) + "\n")
+    save0File.write(str(nnzValues) + "\n")
     save0File.close()
 #TODO: collect info
-save0File = open("save0", "r")
+save0File = open("mac_save0", "r")
 matrices=eval(save0File.readline())
+macStall=eval(save0File.readline())
+nnzValues=eval(save0File.readline())
 print(matrices)
-print(fpgaPerformance)
+print(macStall)
+print(nnzValues)
 
 if(clean):
     for m in matrices:

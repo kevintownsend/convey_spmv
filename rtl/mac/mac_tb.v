@@ -1,6 +1,7 @@
 module mac_tb;
     parameter INTERMEDIATOR_DEPTH = 1024;
     parameter LOG2_INTERMEDIATOR_DEPTH = log2(INTERMEDIATOR_DEPTH - 1);
+    parameter MATRIX_FILENAME = "../../src/tmp/cant/cant.mtx";
 
     reg clk, rst, wr;
     reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] row;
@@ -33,7 +34,7 @@ module mac_tb;
         $readmemh("floats.hex", floats);
         $readmemh("row.hex", row_index);
         $readmemh("col.hex", col_index);
-        file = $fopen("../../src/tmp/cant/cant.mtx","r");
+        file = $fopen(MATRIX_FILENAME, "r");
         r = $fgets(string, file);
         r = $fscanf(file, "%d%d%d", M, N, nnz);
         for(i = 0; i < nnz; i = i + 1) begin
@@ -100,8 +101,10 @@ module mac_tb;
     end
     initial out_count = 0;
     always @(posedge clk) begin
-        if(out_count == nnz) begin
+        if(out_count == M) begin
             $display("reached the end");
+            $display("@verilog:out_count: %d", out_count);
+            $display("@verilog:stall_count: %d : %d", stall_count, nnz);
             $finish;
 
         end
