@@ -1,20 +1,32 @@
 #!/usr/bin/env python3
 import sys
+from sys import *
 from subprocess import *
 import os
 import os.path
+
+force = False
+clean = False
+
+print(argv)
+for currArg in argv:
+    if(currArg[0:2] == "--"):
+        if(currArg[2:] == "force"):
+            force = True
+        if(currArg[2:] == "clean"):
+            clean = True
 
 #TODO: create tmp folder
 proc = Popen(["mkdir", "tmp2"])
 proc.wait()
 os.chdir("tmp2")
 #check if zip file exists
-if(not os.path.isfile("save0")):
+if(not os.path.isfile("save0") or force):
     matrices = ["dw8192", "t2d_q9", "epb1", "raefsky1", "psmigr_2", "torso2"]
     web = ["http://www.cise.ufl.edu/research/sparse/MM/Bai/dw8192.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/TKK/t2d_q9.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/Averous/epb1.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/Simon/raefsky1.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/HB/psmigr_2.tar.gz","http://www.cise.ufl.edu/research/sparse/MM/Norris/torso2.tar.gz",]
     fpgaPerformance = []
     for i in range(len(matrices)):
-        inputLine = input()
+        #inputLine = input()
         if(not os.path.isfile(web[i].split("/")[-1])):
             proc = Popen(["wget", web[i]])
             proc.wait()
@@ -43,10 +55,6 @@ if(not os.path.isfile("save0")):
                 splitLine = line.split(':')
                 if(splitLine[0].strip() == "performance"):
                     fpgaPerformance.append(float(splitLine[1]))
-        proc = Popen(["rm", "-rf", m])
-        proc.wait()
-        proc = Popen(["rm", m + ".mtx"])
-        proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
     save0File.write(str(fpgaPerformance) + "\n")
@@ -57,6 +65,12 @@ matrices=eval(save0File.readline())
 fpgaPerformance=eval(save0File.readline())
 print(matrices)
 print(fpgaPerformance)
+if(clean):
+    for m in matrices:
+        proc = Popen(["rm", "-rf", m])
+        proc.wait()
+        proc = Popen(["rm", m + ".mtx"])
+        proc.wait()
 #TODO: cpu performance
 #TODO: gpu performance
 #TODO: M, N, nnz info
