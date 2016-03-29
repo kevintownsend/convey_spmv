@@ -1,6 +1,7 @@
 module mac_tb;
-    parameter INTERMEDIATOR_DEPTH = 8;
+    parameter INTERMEDIATOR_DEPTH = 1024;
     parameter LOG2_INTERMEDIATOR_DEPTH = log2(INTERMEDIATOR_DEPTH - 1);
+    parameter MATRIX_FILENAME = "../../src/tmp/cant/cant.mtx";
 
     reg clk, rst, wr;
     reg [LOG2_INTERMEDIATOR_DEPTH - 1:0] row;
@@ -18,17 +19,35 @@ module mac_tb;
         forever #5 clk = !clk;
     end
 
-    reg [63:0] floats [0:24];
-    reg [63:0] row_index [0:24];
-    reg [63:0] col_index [0:24];
-
+    reg [63:0] floats [0:10000000];
+    reg [63:0] row_index [0:10000000];
+    reg [63:0] col_index [0:10000000];
+    integer file;
+    integer bufferSize = 100;
+    reg [100 * 8 - 1:0] string;
+    integer M, N, nnz;
+    integer r;
+    integer i = 0;
+    integer tmp1, tmp2;
+    real tmp3;
     initial begin
         $readmemh("floats.hex", floats);
         $readmemh("row.hex", row_index);
         $readmemh("col.hex", col_index);
+        file = $fopen(MATRIX_FILENAME, "r");
+        r = $fgets(string, file);
+        r = $fscanf(file, "%d%d%d", M, N, nnz);
+        for(i = 0; i < nnz; i = i + 1) begin
+            $fscanf(file, "%d%d%f", tmp1, tmp2, tmp3);
+            //$display("tmp1: %d", tmp1);
+            row_index[i] = tmp1 - 1;
+            col_index[i] = tmp2 - 1;
+            floats[i] = $realtobits(tmp3);
+        end
+        $display("finshed reading mtx file");
     end
 
-    integer i = 0;
+    integer stall_count = 0;
     initial begin
         rst = 1;
         wr = 0;
@@ -39,12 +58,17 @@ module mac_tb;
         stall_out = 0;
         #1000 rst = 0;
         #100;
-        for(i = 0; i < 25; i = i + 1) begin
+        for(i = 0; i < nnz; i = i + 1) begin
+            while(stall) begin
+                stall_count = stall_count + 1;
+                wr = 0;
+                #10;
+            end
             wr = 1;
             row = row_index[i];
             v0 = floats[i];
             v1 = floats[col_index[i]];
-            $display("pushing: row: %d, v0: %f, v0: %f", row, $bitstoreal(v0), $bitstoreal(v1));
+            //$display("pushing: row: %d, v0: %f, v0: %f", row, $bitstoreal(v0), $bitstoreal(v1));
             #10;
         end
         wr = 0;
@@ -63,8 +87,11 @@ module mac_tb;
     flopoco_to_ieee conv_before_add0(clk, dut.intermediator_push_to_adder, dut.intermediator_v0_to_adder, push_before_adder, before_adder_v0);
     flopoco_to_ieee conv_before_add1(clk, dut.intermediator_push_to_adder, dut.intermediator_v1_to_adder, , before_adder_v1);
 
+    integer out_count;
     initial begin
-        #100000 $display("watchdog reached");
+        #1000000000 $display("watchdog reached");
+        $display("out_count: %d", out_count);
+        $display("stall_count: %d", stall_count);
         $finish;
     end
 
@@ -72,11 +99,20 @@ module mac_tb;
         #20000 $display("endgame:");
         $display("window end: %d", dut.intermediator_inst.window_end);
     end
-
+    initial out_count = 0;
     always @(posedge clk) begin
-        if(push_out) begin
-            $display("push_out: %d, %f", v_out, $bitstoreal(v_out));
+        if(out_count == M) begin
+            $display("reached the end");
+            $display("@verilog:out_count: %d", out_count);
+            $display("@verilog:stall_count: %d : %d", stall_count, nnz);
+            $finish;
+
         end
+        if(push_out) begin
+            //$display("push_out: %d, %f", v_out, $bitstoreal(v_out));
+            out_count = out_count + 1;
+        end
+        /*
         if(dut.flopoco_conv_push)
             $display("flopoco_conv_push");
         if(dut.multiplier_push)
@@ -96,6 +132,7 @@ module mac_tb;
         if(push_before_adder) begin
             $display("before adder: v0: %f v1: %f", $bitstoreal(before_adder_v0), $bitstoreal(before_adder_v1));
         end
+        */
         /*
         if(dut.multiplier_push)
             $display("flopoco multiplier_out: %H", dut.multiplier_out);
@@ -111,13 +148,13 @@ module mac_tb;
             $display("intermediator p0_stage_3");
         if(dut.intermediator_inst.p0_stage_5)
             $display("intermediator p0_stage_5");
-        */
         if(dut.intermediator_inst.p0_stage_6)
             $display("intermediator p0_stage_6");
         if(dut.intermediator_inst.to_adder_stage_7)
             $display("intermediator to adder stage 7");
         if(dut.intermediator_inst.overflow_fifo_pop_stage_5)
             $display("intermediator popping overflow fifo");
+        */
         /*
         $display("overflow_fifo_empty: %d", dut.intermediator_inst.overflow_fifo_empty);
         $display("p1_stage_5: %d", dut.intermediator_inst.p1_stage_5);

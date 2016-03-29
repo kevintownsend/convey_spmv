@@ -69,7 +69,7 @@ reg response_fifo_pop;
 wire [63:0] response_fifo_q;
 wire response_fifo_full;
 wire response_fifo_empty;
-localparam RESPONSE_FIFO_DEPTH=512;
+localparam RESPONSE_FIFO_DEPTH=1024;
 std_fifo #(.WIDTH(64), .DEPTH(RESPONSE_FIFO_DEPTH), .LATENCY(1)) response_fifo(rst, clk, rsp_mem_push, response_fifo_pop, rsp_mem_q, response_fifo_q, response_fifo_full, response_fifo_empty, , , );
 
 //TODO: keep track of in flight requests

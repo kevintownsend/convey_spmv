@@ -136,3 +136,20 @@ x_vector_cache_post_par.par: x_vector_cache_xst
 	par x_vector_cache x_vector_cache_post_par
 
 cache_xst: x_vector_cache_post_par.par
+
+spmv_pe.prj:
+	echo -e "verilog work spmv_pe.v\nverilog work ../std_fifo/std_fifo.v\nverilog work x_vector_cache.v\nverilog work ../decoders/variable_length_decoder.v\nverilog work ../decoders/argument_decoder.v\nverilog work ../asymmetric_fifo/asymmetric_fifo.v\nverilog work ../ram/asymmetric_distributed_ram.v\nverilog work ../decoders/stream_decoder.v\nverilog work ../decoders/sparse_matrix_decoder.v\nverilog work ../linked_list_fifo/linked_list_fifo.v\nverilog work ../mac/mac.v\nverilog work ../mac/intermediator.v\nverilog work ../ram/dual_port_xor_ram.v\nverilog work ../ram/dual_port_block_ram.v\nvhdl work ../mac/FPMultiplier_11_52_11_52_11_52_uid2.vhdl\nvhdl work ../mac/FPAdder_11_52_uid2.vhdl\nvhdl work ../mac/InputIEEE_11_52_to_11_52.vhdl\nvhdl work ../mac/OutputIEEE_11_52_to_11_52.vhdl\nverilog work ../mac/adder_pipe.v\nverilog work ../mac/multiplier_pipe.v\nverilog work ../mac/ieee_to_flopoco.v\nverilog work ../mac/flopoco_to_ieee.v\nverilog work ../decoders/in_flight_tracker.v" > spmv_pe.prj
+
+spmv_pe_xst : spmv_pe.prj
+	echo "run -ifn spmv_pe.prj -ifmt mixed -top spmv_pe -ofn spmv_pe.ngc -ofmt NGC -p xc5vlx330-2FF1760 -opt_mode Speed -opt_level 1 -vlgincdir ../common" | xst
+
+spmv_pe_post_par.par: spmv_pe_xst
+	ngdbuild spmv_pe
+	map -w spmv_pe
+	par -w spmv_pe spmv_pe_post_par
+	trce -a -v -l 100 -n spmv_pe_post_par
+
+pe_xst: spmv_pe_post_par.par
+
+
+

@@ -4,12 +4,24 @@ from subprocess import *
 import os
 import os.path
 
+force = False
+clean = False
+
+print(argv)
+for currArg in argv:
+    if(currArg[0:2] == "--"):
+        if(currArg[2:] == "force"):
+            force = True
+        if(currArg[2:] == "clean"):
+            clean = True
+
 #TODO: create tmp folder
 proc = Popen(["mkdir", "tmp"])
+proc.wait()
 os.chdir("tmp")
 #check if zip file exists
 
-if(not os.path.isfile("save0")):
+if(not os.path.isfile("save0") or force):
     if(not os.path.isfile("matrices.zip")):
         proc = Popen(["wget", "http://www.nvidia.com/content/NV_Research/matrices.zip"])
         proc.wait()
@@ -33,7 +45,10 @@ if(not os.path.isfile("save0")):
         proc = Popen(["mkdir", m])
         proc.wait()
         proc = Popen(["../smac/smac", "-c", "--multipleFiles=64", m + ".mtx", m + "/" + m + ".smac"])
-        proc.wait()
+        rc = proc.wait()
+        if(rc == 2):
+            print("smac returned an error")
+            exit(1)
         proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
         proc.wait()
         proc = Popen(["export CNY_PERSONALITY_PATH=../../caeCnySpmv/personalities;", "echo hello world"], shell=True)
@@ -54,3 +69,20 @@ if(not os.path.isfile("save0")):
     save0File.write(str(fpgaPerformance) + "\n")
     save0File.close()
 #TODO: collect info
+save0File = open("save0", "r")
+matrices=eval(save0File.readline())
+fpgaPerformance=eval(save0File.readline())
+print(matrices)
+print(fpgaPerformance)
+
+if(clean):
+    for m in matrices:
+        proc = Popen(["rm", "-rf", m])
+        proc.wait()
+        proc = Popen(["rm", m + ".mtx"])
+        proc.wait()
+
+
+#TODO: cpu performance
+#TODO: gpu performance
+#TODO: M, N, nnz info

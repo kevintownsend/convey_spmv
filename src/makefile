@@ -1,4 +1,4 @@
-all: example.hex exampleResult.hex
+all: example.hex exampleResult.hex decomposeMtx decompose
 
 vim:
 	vim -p makefile getBenchmarkResults.py decomposeMtx.cpp binToHex.cpp
@@ -20,6 +20,9 @@ exampleResult.hex: binToHex exampleResult.bin
 
 decomposeMtx: decomposeMtx.cpp
 	g++ -O3 -o decomposeMtx decomposeMtx.cpp
+
+decompose: decompose.cpp
+	g++ -O3 -o decompose decompose.cpp
 
 run: getBenchmarkResults.py
 	getBenchmarkResults.py
