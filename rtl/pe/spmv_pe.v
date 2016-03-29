@@ -282,7 +282,7 @@ assign busy_out = busy_out_r;
     wire [31:0] row_fifo_q;
     wire row_fifo_full;
     wire row_fifo_almost_full;
-    std_fifo #(.WIDTH(32), .DEPTH(512), .ALMOST_FULL_COUNT(8)) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
+    std_fifo #(.WIDTH(32), .DEPTH(1024), .ALMOST_FULL_COUNT(8)) row_fifo(rst, clk, decoder_push_index, mac_input_stage_0, decoder_row, row_fifo_q, row_fifo_full, row_fifo_empty, , , row_fifo_almost_full);
     reg cache_mem_req_fifo_almost_full_r, row_fifo_almost_full_r, cache_almost_full_r;
     always @(posedge clk) begin
         //decoder_stall_index = cache_mem_req_fifo_almost_full || row_fifo_almost_full;
