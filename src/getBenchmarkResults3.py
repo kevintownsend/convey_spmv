@@ -4,14 +4,23 @@ from subprocess import *
 import os
 import os.path
 
+force = False
+clean = False
+
+print(argv)
+for currArg in argv:
+    if(currArg[0:2] == "--"):
+        if(currArg[2:] == "force"):
+            force = True
+        if(currArg[2:] == "clean"):
+            clean = True
+
 #TODO: create tmp folder
 proc = Popen(["mkdir", "tmp3"])
 proc.wait()
 os.chdir("tmp3")
 #check if zip file exists
-if(not os.path.isfile("save0")):
-    #matrices = ["hollywood-2009", "Flan_1565", "HV15R", "kron_g500-logn21", "indochina-2004"]
-    #web = ["http://www.cise.ufl.edu/research/sparse/MM/LAW/hollywood-2009.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Janna/Flan_1565.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Fluorem/HV15R.tar.gz"]
+if(not os.path.isfile("save0") or force):
     matrices = ["wikipedia-20061104", "spal_004", "ldoor", "nlpkkt120", "boneS10", "cage15", "nlpkkt160", "nlpkkt200"]
     web = ["http://www.cise.ufl.edu/research/sparse/MM/Gleich/wikipedia-20061104.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Mittelmann/spal_004.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/GHS_psdef/ldoor.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt120.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Oberwolfach/boneS10.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/vanHeukelum/cage15.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt160.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/Schenk/nlpkkt200.tar.gz"]
 
@@ -52,10 +61,11 @@ if(not os.path.isfile("save0")):
                 splitLine = line.split(':')
                 if(splitLine[0].strip() == "performance"):
                     fpgaPerformance.append(float(splitLine[1]))
-        proc = Popen(["rm", "-rf", m])
-        proc.wait()
-        proc = Popen(["rm", m + ".mtx"])
-        proc.wait()
+        if(clean):
+            proc = Popen(["rm", "-rf", m])
+            proc.wait()
+            proc = Popen(["rm", m + ".mtx"])
+            proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
     save0File.write(str(fpgaPerformance) + "\n")
@@ -66,6 +76,13 @@ matrices=eval(save0File.readline())
 fpgaPerformance=eval(save0File.readline())
 print(matrices)
 print(fpgaPerformance)
+
+if(clean):
+    for m in matrices:
+        proc = Popen(["rm", "-rf", m])
+        proc.wait()
+        proc = Popen(["rm", m + ".mtx"])
+        proc.wait()
 #TODO: cpu performance
 #TODO: gpu performance
 #TODO: M, N, nnz info

@@ -83,6 +83,28 @@ if(clean):
         proc.wait()
 
 
+matrices = ['cant', 'consph', 'cop20k_A', 'dense2', 'mac_econ_fwd500', 'mc2depi', 'pdb1HYS', 'pwtk', 'qcd5_4', 'rail4284', 'rma10', 'scircuit', 'shipsec1', 'webbase-1M']
+fpgaPerformance = [15.4685, 11.0508, 7.16309, 13.1724, 8.95098, 8.88138, 7.21356, 11.2453, 13.8175, 15.3648, 13.9297, 6.925, 16.3397, 8.37901]
 #TODO: cpu performance
 #TODO: gpu performance
 #TODO: M, N, nnz info
+gtx680 = [15.1, 12.6, 5.1, -1, 5.1, 10.9, 12.5, 11.4, 21.2, 6.2, 8.2, 4.7, 10.4, 4.6]
+
+intel = [11.3, 7.7, 9.9, -1, 7.0, 6.0, 11.7, 7.5, 11.0, 7.2, 12.4, 4.5, 10.0, 4.0]
+
+nnz = [4007383, 6010480, 2624331, 4000000, 1273389, 2100225, 4344765, 11634424, 1916928, 11284032, 2374001, 958936, 3977139, 3105536]
+
+table = [matrices, nnz, gtx680, intel, fpgaPerformance]
+
+#TODO: remove dense matrix
+table = []
+for i in range(len(matrices)):
+    if(matrices[i] != "dense2"):
+        table.append([matrices[i], nnz[i], intel[i], gtx680[i], fpgaPerformance[i]])
+
+table.sort(key=lambda a: a[1])
+
+
+print(table)
+
+#TODO: sort 

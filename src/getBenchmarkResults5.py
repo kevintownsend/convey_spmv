@@ -21,7 +21,7 @@ proc.wait()
 os.chdir("tmp5")
 #check if zip file exists
 if(not os.path.isfile("save0") or force):
-    matrices = ["uk-2005", "webbase-2001", "it-2004", "sk2005"]
+    matrices = ["uk-2005", "webbase-2001", "it-2004", "sk-2005"]
     web = ["http://www.cise.ufl.edu/research/sparse/MM/LAW/uk-2005.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/LAW/webbase-2001.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/LAW/it-2004.tar.gz", "http://www.cise.ufl.edu/research/sparse/MM/LAW/sk-2005.tar.gz"]
 
     fpgaPerformance = []
@@ -46,10 +46,8 @@ if(not os.path.isfile("save0") or force):
             save0File.write(str(fpgaPerformance) + "\n")
             save0File.close()
             exit(1)
-        proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
-        proc.wait()
-        proc = Popen(["export CNY_PERSONALITY_PATH=../../caeCnySpmv/personalities;", "echo hello world"], shell=True)
-        proc.wait()
+        #proc = Popen(["../smac/smac", "-d",  m + "/" + m + ".smac", m + "/" + m + ".mtx"])
+        #proc.wait()
         my_env = os.environ
         my_env["CNY_PERSONALITY_PATH"] = "../../caeCnySpmv/personalities"
         proc = Popen(["../../caeCnySpmv/appCnySpmv/CnySpmvApp.exe", m + "/" + m, "64"], env=my_env, stdout=PIPE)
@@ -61,6 +59,11 @@ if(not os.path.isfile("save0") or force):
                 splitLine = line.split(':')
                 if(splitLine[0].strip() == "performance"):
                     fpgaPerformance.append(float(splitLine[1]))
+        if(clean):
+            proc = Popen(["rm", "-rf", m])
+            proc.wait()
+            proc = Popen(["rm", m + ".mtx"])
+            proc.wait()
     save0File = open("save0","w")
     save0File.write(str(matrices) + "\n")
     save0File.write(str(fpgaPerformance) + "\n")
