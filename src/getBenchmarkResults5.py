@@ -80,6 +80,8 @@ if(clean):
         proc.wait()
         proc = Popen(["rm", m + ".mtx"])
         proc.wait()
+matrices = ['uk-2005', 'webbase-2001', 'it-2004', 'sk-2005']
+fpgaPerformance = [18.681, 15.8752, 18.67, 18.68]
 #TODO: cpu performance
 #TODO: gpu performance
 #TODO: M, N, nnz info

@@ -77,6 +77,8 @@ if(clean):
         proc.wait()
         proc = Popen(["rm", m + ".mtx"])
         proc.wait()
+matrices = ['asia_osm', 'hugetrace-00010', 'road_central', 'hugetrace-00020', 'hugebubbles-00000', 'hugebubbles-00010', 'hugebubbles-00020', 'road_usa']
+fpgaPerformance = [9.21535, 7.64019, 6.58708, 7.47223, 7.54086, 7.21172, 7.20562, 7.56024]
 #TODO: cpu performance
 #TODO: gpu performance
 #TODO: M, N, nnz info
